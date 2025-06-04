@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "252469634828",
+    "project_id": "chama-coral-277e8",
+    "storage_bucket": "chama-coral-277e8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:252469634828:android:ab420a1133052026788b29",
+        "android_client_info": {
+          "package_name": "com.example.chama_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDid1XSQ-oJuF4ifK2kPnhAuy32YyhatjQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:252469634828:android:f61e732a038c62fd788b29",
+        "android_client_info": {
+          "package_name": "com.example.chamaf"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDid1XSQ-oJuF4ifK2kPnhAuy32YyhatjQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
