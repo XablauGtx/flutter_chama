@@ -3,10 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:rxdart/rxdart.dart';
 
-// Importa os widgets e a lógica necessária
 import 'package:chama_app/main.dart';
 import 'package:chama_app/models/music.dart';
-import 'package:chama_app/widgets/app_scaffold.dart'; // <<<--- IMPORT DO NOSSO MOLDE
+import 'package:chama_app/widgets/app_scaffold.dart';
 
 class MediaState {
   final MediaItem? mediaItem;
@@ -23,6 +22,8 @@ class BaixoScreen extends StatefulWidget {
 }
 
 class _BaixoScreenState extends State<BaixoScreen> {
+  bool _isLoading = true;
+
   Stream<MediaState> get _mediaStateStream =>
       Rx.combineLatest3<MediaItem?, Duration, Duration?, MediaState>(
           audioHandler.mediaItem,
@@ -42,32 +43,38 @@ class _BaixoScreenState extends State<BaixoScreen> {
     if (currentQueue.isNotEmpty) {
       final currentNaipe = currentQueue.first.extras?['naipe'] as String?;
       if (currentNaipe == 'baixo') {
-        print("A playlist de Baixos já está carregada.");
+        if(mounted) setState(() { _isLoading = false; });
         return;
       }
     }
     
-    print("Carregando ou trocando para a playlist dos Baixos...");
+    if(mounted) setState(() { _isLoading = true; });
+    
     FirebaseFirestore.instance
         .collection('naipes')
         .doc('baixo')
         .collection('musicas')
         .get()
         .then((snapshot) {
-      if (!mounted || snapshot.docs.isEmpty) return;
-      final musicList = snapshot.docs.map((doc) => Music.fromFirestore(doc)).toList();
-      final validMusicList = musicList.where((music) => music.url.isNotEmpty && Uri.tryParse(music.url) != null);
-      final mediaItems = validMusicList
-          .map((music) => MediaItem(
-                id: music.id,
-                title: music.titulo,
-                extras: {'url': music.url, 'letra': music.letra, 'naipe': 'baixo'},
-              ))
-          .toList();
-      if (mediaItems.isNotEmpty) {
-        audioHandler.updatePlaylist(mediaItems);
-      }
-    });
+          if (!mounted) return;
+          final musicList = snapshot.docs.map((doc) => Music.fromFirestore(doc)).toList();
+          final validMusicList = musicList.where((music) => music.url.isNotEmpty && Uri.tryParse(music.url) != null);
+          final mediaItems = validMusicList
+              .map((music) => MediaItem(
+                    id: music.id,
+                    title: music.titulo,
+                    extras: {'url': music.url, 'letra': music.letra, 'naipe': 'baixo'},
+                  ))
+              .toList();
+          if (mediaItems.isNotEmpty) {
+            audioHandler.updatePlaylist(mediaItems);
+          }
+        })
+        .whenComplete(() {
+          if (mounted) {
+            setState(() { _isLoading = false; });
+          }
+        });
   }
 
   String _formatDuration(Duration duration) {
@@ -129,144 +136,167 @@ class _BaixoScreenState extends State<BaixoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // --- O MÉTODO BUILD AGORA USA O AppScaffold ---
     return AppScaffold(
       title: 'Kit Voz - Baixos',
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          image: DecorationImage(image: AssetImage('assets/images/wallpaper.png'), fit: BoxFit.cover),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: StreamBuilder<MediaState>(
-                stream: _mediaStateStream,
-                builder: (context, snapshot) {
-                  final mediaState = snapshot.data;
-                  final mediaItem = mediaState?.mediaItem;
-                  final position = mediaState?.position ?? Duration.zero;
-                  final total = mediaState?.total ?? Duration.zero;
-
-                  return Column(
-                    children: [
-                      Image.asset('assets/images/chama_coral.png',
-                          width: MediaQuery.of(context).size.width * 0.7,
-                          height: MediaQuery.of(context).size.width * 0.7,
-                          fit: BoxFit.contain),
-                      const SizedBox(height: 10),
-                      Text(mediaItem?.title ?? 'Nenhuma música selecionada',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Nexa', color: Colors.white)),
-                      const SizedBox(height: 10),
-                      Slider(
-                          activeColor: Colors.white,
-                          inactiveColor: Colors.grey[600],
-                          min: 0,
-                          max: total.inSeconds.toDouble() > 0 ? total.inSeconds.toDouble() : 1.0,
-                          value: position.inSeconds.toDouble().clamp(0.0, total.inSeconds.toDouble()),
-                          onChanged: (value) => audioHandler.seek(Duration(seconds: value.toInt()))),
-                      Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(_formatDuration(position), style: const TextStyle(color: Colors.white)),
-                            Text(_formatDuration(total), style: const TextStyle(color: Colors.white)),
-                          ]),
-                      const SizedBox(height: 10),
-                      StreamBuilder<PlaybackState>(
-                        stream: audioHandler.playbackState,
-                        builder: (context, snapshot) {
-                          final playing = snapshot.data?.playing ?? false;
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.skip_previous, color: Colors.white, size: 40),
-                                onPressed: audioHandler.skipToPrevious,
-                              ),
-                              IconButton(
-                                icon: Icon(playing ? Icons.pause_circle_filled : Icons.play_circle_filled, color: Colors.white, size: 64),
-                                onPressed: playing ? audioHandler.pause : audioHandler.play,
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.skip_next, color: Colors.white, size: 40),
-                                onPressed: audioHandler.skipToNext,
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  );
-                },
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          : Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                image: DecorationImage(image: AssetImage('assets/images/wallpaper.png'), fit: BoxFit.cover),
               ),
-            ),
-            const Divider(color: Colors.white70),
-            Expanded(
-              child: StreamBuilder<List<MediaItem>>(
-                stream: audioHandler.queue,
-                builder: (context, snapshot) {
-                  final queue = snapshot.data ?? [];
-                  if (queue.isEmpty) return const Center(child: CircularProgressIndicator(color: Colors.white));
-                  
-                  return ListView.builder(
-                    itemCount: queue.length,
-                    itemBuilder: (context, index) {
-                      final mediaItem = queue[index];
-                      return Card(
-                        color: Colors.black54,
-                        child: StreamBuilder<MediaItem?>(
-                          stream: audioHandler.mediaItem,
-                          builder: (context, currentItemSnapshot) {
-                            final currentMediaItem = currentItemSnapshot.data;
-                            final isThisTheSelectedSong = currentMediaItem?.id == mediaItem.id;
-                            
-                            return ListTile(
-                              title: Text(mediaItem.title, style: const TextStyle(color: Colors.white)),
-                              trailing: isThisTheSelectedSong
-                                ? Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.lyrics_outlined, color: Colors.white),
-                                        onPressed: () {
-                                           final lyrics = mediaItem.extras?['letra'] as String?;
-                                            if (lyrics != null && lyrics.isNotEmpty) {
-                                              _showLyricsBottomSheet(context, mediaItem.title, lyrics);
-                                            } else {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Letra não disponível para esta música.')),
-                                              );
-                                            }
-                                        },
-                                      ),
-                                      StreamBuilder<PlaybackState>(
-                                        stream: audioHandler.playbackState,
-                                        builder: (context, playbackStateSnapshot) {
-                                          final isPlaying = playbackStateSnapshot.data?.playing ?? false;
-                                          return Icon(
-                                            isPlaying ? Icons.equalizer : Icons.pause,
-                                            color: Colors.white,
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  )
-                                : const Icon(Icons.play_arrow, color: Colors.white),
-                              onTap: () => audioHandler.skipToQueueItem(index),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: StreamBuilder<MediaState>(
+                      stream: _mediaStateStream,
+                      builder: (context, snapshot) {
+                        final mediaState = snapshot.data;
+                        final mediaItem = mediaState?.mediaItem;
+                        final position = mediaState?.position ?? Duration.zero;
+                        final total = mediaState?.total ?? Duration.zero;
+
+                        return Column(
+                          children: [
+                            Image.asset('assets/images/chama_coral.png',
+                                width: MediaQuery.of(context).size.width * 0.7,
+                                height: MediaQuery.of(context).size.width * 0.7,
+                                fit: BoxFit.contain),
+                            const SizedBox(height: 10),
+                            Text(mediaItem?.title ?? 'Nenhuma música selecionada',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Nexa', color: Colors.white)),
+                            const SizedBox(height: 10),
+                            Slider(
+                                activeColor: Colors.white,
+                                inactiveColor: Colors.grey[600],
+                                min: 0,
+                                max: total.inSeconds.toDouble() > 0 ? total.inSeconds.toDouble() : 1.0,
+                                value: position.inSeconds.toDouble().clamp(0.0, total.inSeconds.toDouble()),
+                                onChanged: (value) => audioHandler.seek(Duration(seconds: value.toInt()))),
+                            Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(_formatDuration(position), style: const TextStyle(color: Colors.white)),
+                                  Text(_formatDuration(total), style: const TextStyle(color: Colors.white)),
+                                ]),
+                            const SizedBox(height: 10),
+                            StreamBuilder<PlaybackState>(
+                              stream: audioHandler.playbackState,
+                              builder: (context, snapshot) {
+                                final playing = snapshot.data?.playing ?? false;
+                                final repeatMode = snapshot.data?.repeatMode ?? AudioServiceRepeatMode.none;
+                                
+                                IconData repeatIcon;
+                                Color repeatColor = Colors.white54;
+                                if(repeatMode == AudioServiceRepeatMode.all) {
+                                  repeatIcon = Icons.repeat;
+                                  repeatColor = Colors.white;
+                                } else if (repeatMode == AudioServiceRepeatMode.one) {
+                                  repeatIcon = Icons.repeat_one;
+                                  repeatColor = Colors.white;
+                                } else {
+                                  repeatIcon = Icons.repeat;
+                                }
+
+                                return Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(repeatIcon, color: repeatColor),
+                                      onPressed: audioHandler.cycleRepeatMode,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.skip_previous, color: Colors.white, size: 40),
+                                      onPressed: audioHandler.skipToPrevious,
+                                    ),
+                                    IconButton(
+                                      icon: Icon(playing ? Icons.pause_circle_filled : Icons.play_circle_filled, color: Colors.white, size: 64),
+                                      onPressed: playing ? audioHandler.pause : audioHandler.play,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.skip_next, color: Colors.white, size: 40),
+                                      onPressed: audioHandler.skipToNext,
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.shuffle, color: Colors.white54),
+                                      onPressed: () {}, 
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  const Divider(color: Colors.white70),
+                  Expanded(
+                    child: StreamBuilder<List<MediaItem>>(
+                      stream: audioHandler.queue,
+                      builder: (context, snapshot) {
+                        final queue = snapshot.data ?? [];
+                        if (queue.isEmpty) return const Center(child: Text("Carregando lista de músicas...", style: TextStyle(color: Colors.white)));
+                        
+                        return ListView.builder(
+                          itemCount: queue.length,
+                          itemBuilder: (context, index) {
+                            final mediaItem = queue[index];
+                            return Card(
+                              color: Colors.black54,
+                              child: StreamBuilder<MediaItem?>(
+                                stream: audioHandler.mediaItem,
+                                builder: (context, currentItemSnapshot) {
+                                  final currentMediaItem = currentItemSnapshot.data;
+                                  final isThisTheSelectedSong = currentMediaItem?.id == mediaItem.id;
+                                  
+                                  return ListTile(
+                                    title: Text(mediaItem.title, style: const TextStyle(color: Colors.white)),
+                                    trailing: isThisTheSelectedSong
+                                      ? Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(Icons.lyrics_outlined, color: Colors.white),
+                                              onPressed: () {
+                                                 final lyrics = mediaItem.extras?['letra'] as String?;
+                                                  if (lyrics != null && lyrics.isNotEmpty) {
+                                                    _showLyricsBottomSheet(context, mediaItem.title, lyrics);
+                                                  } else {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(content: Text('Letra não disponível para esta música.')),
+                                                    );
+                                                  }
+                                              },
+                                            ),
+                                            StreamBuilder<PlaybackState>(
+                                              stream: audioHandler.playbackState,
+                                              builder: (context, playbackStateSnapshot) {
+                                                final isPlaying = playbackStateSnapshot.data?.playing ?? false;
+                                                return Icon(
+                                                  isPlaying ? Icons.equalizer : Icons.pause,
+                                                  color: Colors.white,
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        )
+                                      : const Icon(Icons.play_arrow, color: Colors.white),
+                                    onTap: () => audioHandler.skipToQueueItem(index),
+                                  );
+                                },
+                              ),
                             );
                           },
-                        ),
-                      );
-                    },
-                  );
-                },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 }

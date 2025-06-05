@@ -25,17 +25,65 @@ class KitsDeVozScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
           children: [
-            buildNaipeCard(context, '4 vozes', Icons.arrow_forward_ios, () => Navigator.push(context,MaterialPageRoute(builder: (context) => const QuatroVozesScreen()),),), 
+            buildNaipeCard(
+              context,
+              '4 vozes',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const QuatroVozesScreen()),
+              ),
+            ),
             const SizedBox(height: 20),
-            buildNaipeCard(context, '4 vozes acapella', Icons.arrow_forward_ios, () => Navigator.push(context,MaterialPageRoute(builder: (context) => const QuatroVozesAcapellaScreen()),),),
+            buildNaipeCard(
+              context,
+              '4 vozes acapella',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const QuatroVozesAcapellaScreen()),
+              ),
+            ),
             const SizedBox(height: 20),
-            buildNaipeCard(context,'Sopranos',Icons.arrow_forward_ios,() => Navigator.push(context,MaterialPageRoute(builder: (context) => const SopranoScreen()),),),
+            buildNaipeCard(
+              context,
+              'Sopranos',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SopranoScreen()),
+              ),
+            ),
             const SizedBox(height: 20),
-            buildNaipeCard(context,'Contraltos',Icons.arrow_forward_ios,() => Navigator.push(context,MaterialPageRoute(builder: (context) => const ContraltoScreen()),),),
+            buildNaipeCard(
+              context,
+              'Contraltos',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ContraltoScreen()),
+              ),
+            ),
             const SizedBox(height: 20),
-            buildNaipeCard(context,'Tenores',Icons.arrow_forward_ios,() => Navigator.push(context,MaterialPageRoute(builder: (context) => const TenoresScreen()),),),
+            buildNaipeCard(
+              context,
+              'Tenores',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TenoresScreen()),
+              ),
+            ),
             const SizedBox(height: 20),
-            buildNaipeCard(context,'Baixos',Icons.arrow_forward_ios,() => Navigator.push(context,MaterialPageRoute(builder: (context) => const BaixoScreen()),),),
+            buildNaipeCard(
+              context,
+              'Baixos',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const BaixoScreen()),
+              ),
+            ),
           ],
         ),
       ),

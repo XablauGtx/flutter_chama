@@ -1,16 +1,11 @@
-// lib/audio_handler.dart
-
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:audio_service/audio_service.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:just_audio/just_audio.dart'; // Import necessário para LoopMode
 import 'package:chama_app/models/music.dart';
-// ADICIONE O IMPORT DO CACHE MANAGER AQUI
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
-
-// A função initAudioService continua a mesma...
 Future<MyAudioHandler> initAudioService() async {
   final myAudioHandlerInstance = MyAudioHandler();
   await AudioService.init(
@@ -25,57 +20,60 @@ Future<MyAudioHandler> initAudioService() async {
   return myAudioHandlerInstance;
 }
 
-
-// >>>>> SUBSTITUA SUA CLASSE MyAudioHandler POR ESTA <<<<<
 class MyAudioHandler extends BaseAudioHandler {
   final _player = AudioPlayer();
   final _playlist = ConcatenatingAudioSource(children: []);
-  final _cache = DefaultCacheManager(); // Instância do gerenciador de cache
+  final _cache = DefaultCacheManager();
 
   MyAudioHandler() {
     _notifyAudioHandlerAboutPlaybackEvents();
     _listenForDurationChanges();
     _listenForCurrentSongIndexChanges();
   }
+  
+  Future<Uri> _getArtworkUri() async {
+    final tempDir = await getTemporaryDirectory();
+    final artworkFile = File('${tempDir.path}/artwork.png');
+    
+    if (!artworkFile.existsSync()) {
+      final byteData = await rootBundle.load('assets/images/chama_coral.png');
+      await artworkFile.writeAsBytes(byteData.buffer.asUint8List());
+    }
+    return artworkFile.uri;
+  }
 
-  // --- O MÉTODO UPDATEPLAYLIST FOI MODIFICADO PARA LIDAR COM O CACHE ---
   @override
   Future<void> updatePlaylist(List<MediaItem> mediaItems) async {
-    // Limpa a playlist antiga no player e na UI
+    final artworkUri = await _getArtworkUri();
+    final processedMediaItems = mediaItems.map((item) {
+      return item.copyWith(artUri: artworkUri);
+    }).toList();
+
     await _playlist.clear();
-    queue.add([]); // Limpa a fila na UI
+    queue.add([]); 
 
-    // Lista para guardar as fontes de áudio (agora com cache)
     final audioSources = <AudioSource>[];
-
-    // Faz um loop para processar cada música
-    for (var mediaItem in mediaItems) {
+    for (var mediaItem in processedMediaItems) {
       final url = mediaItem.extras!['url'] as String;
-      
-      // Pede ao cache manager o arquivo. Ele baixa se não existir, ou retorna o local se já existir.
       final file = await _cache.getSingleFile(url);
-      
-      // Adiciona a fonte de áudio apontando para o ARQUIVO LOCAL
-      audioSources.add(
-        AudioSource.uri(
-          Uri.file(file.path), // Usa o caminho do arquivo no celular
-          tag: mediaItem,
-        ),
-      );
+      audioSources.add(AudioSource.uri(Uri.file(file.path), tag: mediaItem));
     }
     
-    // Adiciona todas as fontes de áudio locais à playlist do player
     await _playlist.addAll(audioSources);
-
-    // Atualiza a fila na UI com os MediaItems originais
-    queue.add(mediaItems);
-    
-    // Inicia o player com a nova playlist
+    queue.add(processedMediaItems);
     await _player.setAudioSource(_playlist, initialIndex: 0, preload: true);
   }
 
-  // O método _createAudioSource não é mais necessário
-  // AudioSource _createAudioSource(MediaItem mediaItem) { ... }
+  // --- NOVO MÉTODO PARA O MODO DE REPETIÇÃO ---
+  Future<void> cycleRepeatMode() async {
+    final currentMode = _player.loopMode;
+    final nextMode = switch (currentMode) {
+      LoopMode.off => LoopMode.all,
+      LoopMode.all => LoopMode.one,
+      LoopMode.one => LoopMode.off,
+    };
+    await _player.setLoopMode(nextMode);
+  }
 
   @override
   Future<void> skipToQueueItem(int index) async {
@@ -83,10 +81,7 @@ class MyAudioHandler extends BaseAudioHandler {
     await _player.seek(Duration.zero, index: index);
     play();
   }
-
-  // ... O resto da sua classe (play, pause, seek, listeners, etc.) continua igual ...
-  // (O código abaixo não foi alterado)
-
+  
   @override
   Future<void> play() => _player.play();
 
@@ -124,6 +119,12 @@ class MyAudioHandler extends BaseAudioHandler {
           MediaAction.seekBackward,
         },
         androidCompactActionIndices: const [0, 1, 3],
+        // --- ATUALIZAÇÃO PARA INCLUIR O MODO DE REPETIÇÃO ---
+        repeatMode: const {
+          LoopMode.off: AudioServiceRepeatMode.none,
+          LoopMode.one: AudioServiceRepeatMode.one,
+          LoopMode.all: AudioServiceRepeatMode.all,
+        }[_player.loopMode]!,
         processingState: const {
           ProcessingState.idle: AudioProcessingState.idle,
           ProcessingState.loading: AudioProcessingState.loading,
