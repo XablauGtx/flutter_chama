@@ -177,7 +177,7 @@ class HomeScreen extends StatelessWidget {
                     buildButton(label: "Banda", assetPath: 'assets/images/banda.svg', onPressed: () => btnBanda(context), isSvg: true),
                     buildButton(label: "Partituras", assetPath: 'assets/images/partitura.svg', onPressed: () => btnPartitura(context), fontSize: 11, isSvg: true),
                     buildButton(label: "Cifras", assetPath: 'assets/images/cifra.svg', onPressed: () => btnCifras(context), isSvg: true),
-                    buildButton(label: "Oração", assetPath: 'assets/images/oracao.svg', onPressed: () => btnOracao(context), fontSize: 12, isSvg: true),
+                    buildButton(label: "Pedidos de\nOração", assetPath: 'assets/images/oracao.svg', onPressed: () => btnOracao(context), fontSize: 12, isSvg: true),
                     buildButton(label: "Novo Coralista", assetPath: 'assets/images/novo_usuario.svg', onPressed: () => btnNovoCo(context), fontSize: 12, isSvg: true),
                   ],
                 ),
