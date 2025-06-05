@@ -1,6 +1,5 @@
 // lib/screens/kits_de_voz_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:chama_app/screens/kitvoz/quatro_vozes.dart';
 import 'package:chama_app/screens/kitvoz/quatro_vozes_acapella.dart';
 import 'package:chama_app/screens/kitvoz/sopranos.dart';
@@ -39,18 +38,13 @@ class KitsDeVozScreen extends StatelessWidget {
             icon: const Icon(Icons.menu, color: Colors.white), // Ícone de menu hambúrguer
             onPressed: () {
               // Ação para o menu hambúrguer (ex: abrir Drawer)
-              Scaffold.of(context).openDrawer(); // Descomente se tiver um Drawer
+              Scaffold.of(context).openDrawer(); 
             },
           ),
-          // Se tiver um ícone de configurações/informação no canto superior direito como nas suas imagens
-          // IconButton(
-          //   icon: const Icon(Icons.settings, color: Colors.white), // Exemplo de ícone de configurações
-          //   onPressed: () {
-          //     // Ação para configurações
-          //   },
-          // ),
         ],
       ),
+
+
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -58,57 +52,20 @@ class KitsDeVozScreen extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-        child: ListView( // Usando ListView para permitir rolagem se houver muitos itens
+        child: ListView( 
           padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
           children: [
-            // Cartão para "4 vozes" - se houver uma tela específica para isso
-            // Se '4 vozes' ou '4 vozes acapella' forem coleções diferentes no Firestore,
-            // você precisaria de telas separadas para elas também, seguindo o padrão.
-            // Por enquanto, vamos assumir que os botões levam para as telas de naipe.
-            buildNaipeCard(context, '4 vozes', Icons.camera_alt, () => null), // Não navega por enquanto
-            const SizedBox(height: 10),
-            buildNaipeCard(context, '4 vozes acapella', Icons.camera_alt, () => null), // Não navega por enquanto
-            const SizedBox(height: 10),
-
-            buildNaipeCard(
-              context,
-              'Sopranos',
-              Icons.camera_alt,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SopranoScreen()),
-              ),
-            ),
-            const SizedBox(height: 10),
-            buildNaipeCard(
-              context,
-              'Contraltos',
-              Icons.camera_alt,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ContraltoScreen()),
-              ),
-            ),
-            const SizedBox(height: 10),
-            buildNaipeCard(
-              context,
-              'Tenores',
-              Icons.camera_alt,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TenoresScreen()),
-              ),
-            ),
-            const SizedBox(height: 10),
-            buildNaipeCard(
-              context,
-              'Baixos',
-              Icons.camera_alt,
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const BaixoScreen()),
-              ),
-            ),
+            buildNaipeCard(context, '4 vozes', Icons.arrow_forward_ios, () => Navigator.push(context,MaterialPageRoute(builder: (context) => const Quatro_vozesScreen()),),), // Não navega por enquanto
+            const SizedBox(height: 20),
+            buildNaipeCard(context, '4 vozes acapella', Icons.arrow_forward_ios, () => Navigator.push(context,MaterialPageRoute(builder: (context) => const Quatro_Vozes_Acapella_Screen()),),),
+            const SizedBox(height: 20),
+            buildNaipeCard(context,'Sopranos',Icons.arrow_forward_ios,() => Navigator.push(context,MaterialPageRoute(builder: (context) => const SopranoScreen()),),),
+            const SizedBox(height: 20),
+            buildNaipeCard(context,'Contraltos',Icons.arrow_forward_ios,() => Navigator.push(context,MaterialPageRoute(builder: (context) => const ContraltoScreen()),),),
+            const SizedBox(height: 20),
+            buildNaipeCard(context,'Tenores',Icons.arrow_forward_ios,() => Navigator.push(context,MaterialPageRoute(builder: (context) => const TenoresScreen()),),),
+            const SizedBox(height: 20),
+            buildNaipeCard(context,'Baixos',Icons.arrow_forward_ios,() => Navigator.push(context,MaterialPageRoute(builder: (context) => const BaixoScreen()),),),
           ],
         ),
       ),
@@ -127,19 +84,9 @@ class KitsDeVozScreen extends StatelessWidget {
         onTap: onPressed,
         borderRadius: BorderRadius.circular(10),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+          padding: const EdgeInsets.symmetric(vertical: 25.0, horizontal: 20.0),
           child: Row(
             children: [
-              // Ícone da chama (se for um SVG, use SvgPicture.asset)
-              // Se for um ícone normal do Material, use Icon
-              // Exemplo com ícone de chama se for um SVG:
-              // SvgPicture.asset(
-              //   'assets/images/chama_icon.svg', // Substitua pelo caminho do seu ícone de chama
-              //   width: 40,
-              //   height: 40,
-              //   colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn), // Cor da chama
-              // ),
-              // Ou um placeholder simples por enquanto:
               const Icon(Icons.music_note, color: Colors.red, size: 40), // Placeholder de ícone
               const SizedBox(width: 15),
               Expanded(

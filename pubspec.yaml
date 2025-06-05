@@ -18,6 +18,9 @@ dependencies:
   cloud_firestore: ^4.15.7 # Versão atual
   firebase_storage: ^11.6.8 # Versão atual
   audioplayers: ^5.2.1 # Versão atual
+  audio_service: ^0.18.12
+  just_audio: ^0.9.36
+  rxdart: ^0.27.7
 
 dev_dependencies:
   flutter_test:
