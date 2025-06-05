@@ -30,30 +30,39 @@ class MyDrawer extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Drawer(
-      backgroundColor: const Color(0xFF192F3C),
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: <Widget>[
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3),
-              image: const DecorationImage(
-                image: AssetImage("assets/images/chama_coral.png"),
-                fit: BoxFit.contain,
-                opacity: 0.5,
-              ),
-            ),
-            child: const Text(
-              'Chama Coral',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontFamily: 'Nexa',
-              ),
-            ),
+Widget build(BuildContext context) {
+  return Drawer(
+    backgroundColor: const Color(0xFF192F3C),
+    child: ListView(
+      padding: EdgeInsets.zero,
+      children: <Widget>[
+        DrawerHeader(
+          decoration: const BoxDecoration(
+            color: Colors.transparent, // deixamos transparente, pois a imagem será inserida no Stack
           ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Opacity(
+                opacity: 0.5,
+                child: Image.asset(
+                  "assets/images/chama_coral.png",
+                  fit: BoxFit.cover,
+                ),
+              ),
+                   const Center( // <-- Agora Center é const
+                    child: const Text(
+                      'Chama Coral',
+                    style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontFamily: 'Nexa',
+                 ),
+               ),
+             ),
+            ],
+          ),
+        ),
           _buildDrawerItem(
             icon: Icons.home,
             text: 'Início',
@@ -79,6 +88,7 @@ class MyDrawer extends StatelessWidget {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const AgendaScreen()));
             },
           ),
+          const Divider(color: Colors.white30),
           _buildDrawerItem(
             icon: Icons.queue_music,
             text: 'Kits de Voz',
@@ -95,7 +105,7 @@ class MyDrawer extends StatelessWidget {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const LetrasScreen()));
             },
           ),
-          const Divider(color: Colors.white30),
+          
            _buildDrawerItem(
             icon: Icons.music_video,
             text: 'Banda',
