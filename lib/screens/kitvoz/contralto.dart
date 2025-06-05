@@ -3,9 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:rxdart/rxdart.dart';
 
-// Importa a instância global do handler e o modelo de dados centralizado
+// Importa a instância global, modelos e agora o nosso novo AppScaffold
 import 'package:chama_app/main.dart';
 import 'package:chama_app/models/music.dart';
+import 'package:chama_app/widgets/app_scaffold.dart';
 
 // Classe auxiliar para combinar os streams de dados para a UI do player
 class MediaState {
@@ -40,12 +41,16 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
   }
 
   void _loadAndSetPlaylist() {
-    if (audioHandler.queue.value.isNotEmpty) {
-      print("A playlist já está carregada no handler. A tela não vai reiniciar a música.");
-      return;
+    final currentQueue = audioHandler.queue.value;
+    if (currentQueue.isNotEmpty) {
+      final currentNaipe = currentQueue.first.extras?['naipe'] as String?;
+      if (currentNaipe == 'contralto') {
+        print("A playlist de Contralto já está carregada.");
+        return;
+      }
     }
     
-    print("Handler está vazio. Carregando playlist do contralto...");
+    print("Carregando ou trocando para a playlist do Contralto...");
     FirebaseFirestore.instance
         .collection('naipes')
         .doc('contralto')
@@ -56,11 +61,12 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
 
       final musicList = snapshot.docs.map((doc) => Music.fromFirestore(doc)).toList();
       final validMusicList = musicList.where((music) => music.url.isNotEmpty && Uri.tryParse(music.url) != null);
+      
       final mediaItems = validMusicList
           .map((music) => MediaItem(
                 id: music.id,
                 title: music.titulo,
-                extras: {'url': music.url, 'letra': music.letra},
+                extras: {'url': music.url, 'letra': music.letra, 'naipe': 'contralto'},
               ))
           .toList();
 
@@ -145,17 +151,10 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kit Voz - Contralto', style: TextStyle(fontFamily: 'Nexa', color: Colors.white)),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF192F3C),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Container(
+    // --- O MÉTODO BUILD AGORA USA O NOSSO AppScaffold REUTILIZÁVEL ---
+    return AppScaffold(
+      title: 'Kit Voz - Contralto', // 1. Passamos o título
+      body: Container( // 2. Passamos todo o conteúdo da tela como 'body'
         width: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(image: AssetImage('assets/images/wallpaper.png'), fit: BoxFit.cover),
@@ -202,7 +201,6 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
                         builder: (context, snapshot) {
                           final playing = snapshot.data?.playing ?? false;
                           return Row(
-                            // --- ALTERAÇÃO 1: VOLTOU PARA 3 BOTÕES PRINCIPAIS ---
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               IconButton(
@@ -217,7 +215,6 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
                                 icon: const Icon(Icons.skip_next, color: Colors.white, size: 40),
                                 onPressed: audioHandler.skipToNext,
                               ),
-                              // O BOTÃO DE LETRA FOI REMOVIDO DAQUI
                             ],
                           );
                         },
@@ -249,9 +246,8 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
                             
                             return ListTile(
                               title: Text(mediaItem.title, style: const TextStyle(color: Colors.white)),
-                              // --- ALTERAÇÃO 2: NOVA LÓGICA PARA O 'TRAILING' ---
                               trailing: isThisTheSelectedSong
-                                ? Row( // Se for a música selecionada, mostra uma fileira de botões
+                                ? Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
@@ -279,9 +275,8 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
                                       ),
                                     ],
                                   )
-                                : const Icon(Icons.play_arrow, color: Colors.white), // Senão, mostra só o ícone de play
+                                : const Icon(Icons.play_arrow, color: Colors.white),
                               onTap: () => audioHandler.skipToQueueItem(index),
-                              // onLongPress agora é opcional, já que temos um botão para a letra
                             );
                           },
                         ),

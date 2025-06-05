@@ -1,7 +1,16 @@
+// lib/audio_handler.dart
+
+import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:chama_app/models/music.dart'; // Certifique-se que o caminho está correto
+import 'package:chama_app/models/music.dart';
+// ADICIONE O IMPORT DO CACHE MANAGER AQUI
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
+
+// A função initAudioService continua a mesma...
 Future<MyAudioHandler> initAudioService() async {
   final myAudioHandlerInstance = MyAudioHandler();
   await AudioService.init(
@@ -16,45 +25,70 @@ Future<MyAudioHandler> initAudioService() async {
   return myAudioHandlerInstance;
 }
 
+
+// >>>>> SUBSTITUA SUA CLASSE MyAudioHandler POR ESTA <<<<<
 class MyAudioHandler extends BaseAudioHandler {
   final _player = AudioPlayer();
   final _playlist = ConcatenatingAudioSource(children: []);
+  final _cache = DefaultCacheManager(); // Instância do gerenciador de cache
 
   MyAudioHandler() {
     _notifyAudioHandlerAboutPlaybackEvents();
     _listenForDurationChanges();
     _listenForCurrentSongIndexChanges();
   }
-  
+
+  // --- O MÉTODO UPDATEPLAYLIST FOI MODIFICADO PARA LIDAR COM O CACHE ---
+  @override
   Future<void> updatePlaylist(List<MediaItem> mediaItems) async {
+    // Limpa a playlist antiga no player e na UI
     await _playlist.clear();
-    await _playlist.addAll(mediaItems.map(_createAudioSource).toList());
+    queue.add([]); // Limpa a fila na UI
+
+    // Lista para guardar as fontes de áudio (agora com cache)
+    final audioSources = <AudioSource>[];
+
+    // Faz um loop para processar cada música
+    for (var mediaItem in mediaItems) {
+      final url = mediaItem.extras!['url'] as String;
+      
+      // Pede ao cache manager o arquivo. Ele baixa se não existir, ou retorna o local se já existir.
+      final file = await _cache.getSingleFile(url);
+      
+      // Adiciona a fonte de áudio apontando para o ARQUIVO LOCAL
+      audioSources.add(
+        AudioSource.uri(
+          Uri.file(file.path), // Usa o caminho do arquivo no celular
+          tag: mediaItem,
+        ),
+      );
+    }
+    
+    // Adiciona todas as fontes de áudio locais à playlist do player
+    await _playlist.addAll(audioSources);
+
+    // Atualiza a fila na UI com os MediaItems originais
     queue.add(mediaItems);
-    await _player.setAudioSource(_playlist, initialIndex: 0, preload: false);
+    
+    // Inicia o player com a nova playlist
+    await _player.setAudioSource(_playlist, initialIndex: 0, preload: true);
   }
 
-  AudioSource _createAudioSource(MediaItem mediaItem) {
-    return AudioSource.uri(
-      Uri.parse(mediaItem.extras!['url']),
-      tag: mediaItem,
-    );
-  }
+  // O método _createAudioSource não é mais necessário
+  // AudioSource _createAudioSource(MediaItem mediaItem) { ... }
 
   @override
   Future<void> skipToQueueItem(int index) async {
-    // <-- DEBUG PRINT ADICIONADO
-    print("HANDLER: Método skipToQueueItem($index) chamado.");
     if (index < 0 || index >= _playlist.length) return;
     await _player.seek(Duration.zero, index: index);
     play();
   }
-  
+
+  // ... O resto da sua classe (play, pause, seek, listeners, etc.) continua igual ...
+  // (O código abaixo não foi alterado)
+
   @override
-  Future<void> play() {
-    // <-- DEBUG PRINT ADICIONADO
-    print("HANDLER: Método play() chamado.");
-    return _player.play();
-  }
+  Future<void> play() => _player.play();
 
   @override
   Future<void> pause() => _player.pause();
@@ -76,9 +110,6 @@ class MyAudioHandler extends BaseAudioHandler {
   
   void _notifyAudioHandlerAboutPlaybackEvents() {
     _player.playbackEventStream.listen((PlaybackEvent event) {
-      // <-- DEBUG PRINT ADICIONADO
-      print("PLAYER EVENT: processingState=${_player.processingState}, playing=${_player.playing}, currentIndex=${event.currentIndex}");
-
       final playing = _player.playing;
       playbackState.add(playbackState.value.copyWith(
         controls: [
@@ -106,9 +137,7 @@ class MyAudioHandler extends BaseAudioHandler {
         speed: _player.speed,
         queueIndex: event.currentIndex,
       ));
-    }, 
-    // <-- BLOCO DE ERRO ADICIONADO
-    onError: (Object e, StackTrace st) {
+    }, onError: (Object e, StackTrace st) {
       print('PLAYER ERROR: Um erro ocorreu no stream do player: $e');
     });
   }

@@ -1,4 +1,3 @@
-// lib/screens/kits_de_voz_screen.dart
 import 'package:flutter/material.dart';
 import 'package:chama_app/screens/kitvoz/quatro_vozes.dart';
 import 'package:chama_app/screens/kitvoz/quatro_vozes_acapella.dart';
@@ -6,45 +5,16 @@ import 'package:chama_app/screens/kitvoz/sopranos.dart';
 import 'package:chama_app/screens/kitvoz/contralto.dart';
 import 'package:chama_app/screens/kitvoz/tenores.dart';
 import 'package:chama_app/screens/kitvoz/baixos.dart';
-
-
+import 'package:chama_app/widgets/app_scaffold.dart'; // <<<--- IMPORT DO NOSSO AppScaffold
 
 class KitsDeVozScreen extends StatelessWidget {
   const KitsDeVozScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Chama Coral', // Título da AppBar conforme sua imagem
-          style: TextStyle(
-            fontFamily: 'Nexa',
-            color: Colors.white,
-            fontSize: 22,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF192F3C), // Cor escura para a AppBar
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context); // Retorna à tela anterior
-          },
-        ),
-        // Ícone de menu hambúrguer, se desejar (não funcional aqui)
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white), // Ícone de menu hambúrguer
-            onPressed: () {
-              // Ação para o menu hambúrguer (ex: abrir Drawer)
-              Scaffold.of(context).openDrawer(); 
-            },
-          ),
-        ],
-      ),
-
-
+    // --- A TELA AGORA USA O AppScaffold ---
+    return AppScaffold(
+      title: 'Chama Coral', // Título que será exibido no AppBar do AppScaffold
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -52,12 +22,12 @@ class KitsDeVozScreen extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-        child: ListView( 
+        child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
           children: [
-            buildNaipeCard(context, '4 vozes', Icons.arrow_forward_ios, () => Navigator.push(context,MaterialPageRoute(builder: (context) => const Quatro_vozesScreen()),),), // Não navega por enquanto
+            buildNaipeCard(context, '4 vozes', Icons.arrow_forward_ios, () => Navigator.push(context,MaterialPageRoute(builder: (context) => const QuatroVozesScreen()),),), 
             const SizedBox(height: 20),
-            buildNaipeCard(context, '4 vozes acapella', Icons.arrow_forward_ios, () => Navigator.push(context,MaterialPageRoute(builder: (context) => const Quatro_Vozes_Acapella_Screen()),),),
+            buildNaipeCard(context, '4 vozes acapella', Icons.arrow_forward_ios, () => Navigator.push(context,MaterialPageRoute(builder: (context) => const QuatroVozesAcapellaScreen()),),),
             const SizedBox(height: 20),
             buildNaipeCard(context,'Sopranos',Icons.arrow_forward_ios,() => Navigator.push(context,MaterialPageRoute(builder: (context) => const SopranoScreen()),),),
             const SizedBox(height: 20),
@@ -72,7 +42,7 @@ class KitsDeVozScreen extends StatelessWidget {
     );
   }
 
-  // Widget para construir cada cartão de naipe
+  // Widget para construir cada cartão de naipe (continua igual)
   Widget buildNaipeCard(BuildContext context, String label, IconData iconData, VoidCallback? onPressed) {
     return Card(
       color: const Color(0xFF192F3C), // Cor de fundo do cartão
