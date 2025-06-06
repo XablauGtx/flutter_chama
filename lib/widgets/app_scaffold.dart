@@ -6,12 +6,14 @@ import 'package:chama_app/widgets/my_drawer.dart';
 class AppScaffold extends StatelessWidget {
   final String title;
   final Widget body;
-  final PreferredSizeWidget? bottom; // <<<--- PARÂMETRO NOVO E OPCIONAL
+  final PreferredSizeWidget? bottom;
+  final List<Widget>? actions; // <<<--- 1. PARÂMETRO NOVO E OPCIONAL
 
   const AppScaffold({
     required this.title,
     required this.body,
-    this.bottom, // <<<--- ADICIONADO AO CONSTRUTOR
+    this.bottom,
+    this.actions, // <<<--- 2. ADICIONADO AO CONSTRUTOR
     super.key,
   });
 
@@ -33,7 +35,8 @@ class AppScaffold extends StatelessWidget {
             );
           },
         ),
-        bottom: bottom, // <<<--- USADO AQUI
+        bottom: bottom,
+        actions: actions, // <<<--- 3. USADO AQUI
       ),
       body: body,
     );

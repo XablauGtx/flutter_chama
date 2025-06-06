@@ -1,53 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:chama_app/helpers/dialog_helpers.dart'; // Importa a função de senha
 import 'package:chama_app/screens/recados_screen.dart';
 import 'package:chama_app/screens/agenda_screen.dart';
 import 'package:chama_app/screens/kits_de_voz_screen.dart';
 import 'package:chama_app/screens/letras_screen.dart';
 import 'package:chama_app/screens/banda_screen.dart';
-import 'package:chama_app/screens/partituras_screen.dart';
 import 'package:chama_app/screens/cifras_screen.dart';
 import 'package:chama_app/screens/oracao_screen.dart';
-import 'package:chama_app/screens/novo_coralista_screen.dart';
-import 'package:chama_app/widgets/my_drawer.dart'; // Importa o Drawer
+import 'package:chama_app/screens/chamada_chama.dart';
+import 'package:chama_app/widgets/my_drawer.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   void btnRecados(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (context) => const RecadosScreen()));
+    debugPrint('Botão Recados pressionado e navegando!');
   }
 
   void btnAgenda(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (context) => const AgendaScreen()));
+    debugPrint('Botão Agenda pressionado e navegando!');
   }
 
   void btnKitVoz(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (context) => const KitsDeVozScreen()));
+    debugPrint('Botão Kits de Voz pressionado e navegando!');
   }
 
   void btnLetras(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (context) => const LetrasScreen()));
+    debugPrint('Botão Letras pressionado!');
   }
 
   void btnBanda(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (context) => const BandaScreen()));
   }
 
+  // --- FUNÇÃO DE NAVEGAÇÃO PARA PARTITURAS ATUALIZADA ---
   void btnPartitura(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const PartiturasScreen()));
+    showPasswordDialog(context); // Chama o pop-up de senha
+    debugPrint('Botão Partituras pressionado!');
   }
 
   void btnCifras(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (context) => const CifrasScreen()));
+    debugPrint('Botão Cifras pressionado!');
   }
 
   void btnOracao(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (context) => const OracaoScreen()));
+    debugPrint('Botão Oração pressionado!');
   }
 
   void btnNovoCo(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const NovoCoralistaScreen()));
+    Navigator.push(context, MaterialPageRoute(builder: (context) => const ChamadaChamaScreen()));
+    debugPrint('Botão Novo Coralista pressionado!');
   }
 
   Widget buildButton({
@@ -99,7 +108,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // --- MUDANÇA 1: ADICIONADO O DRAWER ---
       drawer: const MyDrawer(),
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -114,17 +122,11 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        // --- MUDANÇA 2: CORRIGIDO O BOTÃO DE MENU ---
-        // O Builder é usado aqui para garantir que o `context` correto seja usado para abrir o Drawer
         leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white, size: 30),
-              onPressed: () {
-                Scaffold.of(context).openDrawer(); // Agora funciona corretamente
-              },
-            );
-          },
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white, size: 30),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
         ),
         actions: [
           IconButton(
@@ -177,8 +179,8 @@ class HomeScreen extends StatelessWidget {
                     buildButton(label: "Banda", assetPath: 'assets/images/banda.svg', onPressed: () => btnBanda(context), isSvg: true),
                     buildButton(label: "Partituras", assetPath: 'assets/images/partitura.svg', onPressed: () => btnPartitura(context), fontSize: 11, isSvg: true),
                     buildButton(label: "Cifras", assetPath: 'assets/images/cifra.svg', onPressed: () => btnCifras(context), isSvg: true),
-                    buildButton(label: "Pedidos de\nOração", assetPath: 'assets/images/oracao.svg', onPressed: () => btnOracao(context), fontSize: 12, isSvg: true),
-                    buildButton(label: "Novo Coralista", assetPath: 'assets/images/novo_usuario.svg', onPressed: () => btnNovoCo(context), fontSize: 12, isSvg: true),
+                    buildButton(label: "Oração", assetPath: 'assets/images/oracao.svg', onPressed: () => btnOracao(context), fontSize: 12, isSvg: true),
+                    buildButton(label: "Chamada", assetPath: 'assets/images/novo_usuario.svg', onPressed: () => btnNovoCo(context), fontSize: 12, isSvg: true),
                   ],
                 ),
                 const Spacer(flex: 1),

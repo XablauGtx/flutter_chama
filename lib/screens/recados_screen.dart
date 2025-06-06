@@ -1,47 +1,162 @@
-// lib/screens/recados_screen.dart
+import 'package:chama_app/screens/recado_detail_screen.dart';
+import 'package:chama_app/widgets/app_scaffold.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
-class RecadosScreen extends StatelessWidget {
+// Modelo para os dados do Recado
+class Recado {
+  final String title;
+  final String content;
+  final String imageUrl;
+  Recado({required this.title, required this.content, required this.imageUrl});
+}
+
+class RecadosScreen extends StatefulWidget {
   const RecadosScreen({super.key});
 
   @override
+  State<RecadosScreen> createState() => _RecadosScreenState();
+}
+
+class _RecadosScreenState extends State<RecadosScreen> {
+  final _pageController = PageController();
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Recados',
-          style: TextStyle(
-            fontFamily: 'Nexa',
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF192F3C), // Uma cor para o AppBar desta tela
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context); // Retorna à tela anterior
-          },
-        ),
+    return AppScaffold(
+      title: "Recados",
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('recados').orderBy('timestamp', descending: true).snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text("Nenhum recado no momento.", style: TextStyle(color: Colors.white)));
+          }
+
+          final recados = snapshot.data!.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return Recado(
+              title: data['titulo'] ?? '',
+              content: data['conteudo'] ?? '',
+              imageUrl: data['imagemUrl'] ?? '',
+            );
+          }).toList();
+
+          return Stack(
+            children: [
+              // PageView para os recados
+              PageView.builder(
+                controller: _pageController,
+                itemCount: recados.length,
+                itemBuilder: (context, index) {
+                  final recado = recados[index];
+                  return _buildRecadoPage(recado);
+                },
+              ),
+              // Indicador de página (bolinhas)
+              Positioned(
+                bottom: 120,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: SmoothPageIndicator(
+                    controller: _pageController,
+                    count: recados.length,
+                    effect: const WormEffect(
+                      dotColor: Colors.white54,
+                      activeDotColor: Colors.white,
+                      dotHeight: 8,
+                      dotWidth: 8,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/wallpaper.png'), // Use o mesmo wallpaper
+    );
+  }
+
+  Widget _buildRecadoPage(Recado recado) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Imagem de fundo
+        Positioned.fill(
+          child: CachedNetworkImage(
+            imageUrl: recado.imageUrl,
             fit: BoxFit.cover,
+            placeholder: (context, url) => Container(color: Colors.grey[800]),
+            errorWidget: (context, url, error) => Container(color: Colors.black, child: const Icon(Icons.error, color: Colors.red)),
           ),
         ),
-        child: const Center(
-          child: Text(
-            'Esta é a tela de Recados!',
-            style: TextStyle(
-              fontFamily: 'Nexa',
-              color: Colors.white,
-              fontSize: 24,
+        // Gradiente escuro na parte de baixo para legibilidade
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 400,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.transparent, Colors.black.withOpacity(0.8), Colors.black],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
           ),
         ),
-      ),
+        // Conteúdo de texto e botão
+        Positioned(
+          bottom: 40,
+          left: 24,
+          right: 24,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                recado.title,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Nexa',
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 40),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RecadoDetailScreen(title: recado.title, content: recado.content),
+                      ),
+                    );
+                  },
+                  backgroundColor: Colors.white,
+                  child: const Icon(Icons.arrow_forward, color: Colors.black),
+                ),
+              )
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

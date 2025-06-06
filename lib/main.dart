@@ -1,34 +1,21 @@
-import 'package:flutter/material.dart';
-import 'package:chama_app/home_screen.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:chama_app/firebase_options.dart';
-// Não é mais necessário importar audio_service aqui, pois audio_handler.dart já o faz.
-import 'package:chama_app/audio_handler.dart';
+import 'package:chama_app/home_screen.dart'; 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart'; // <<<--- CORREÇÃO 1
+import 'audio_handler.dart';
 
-// Classe personalizada para ocultar o indicador de rolagem
-class NoThumbScrollBehavior extends ScrollBehavior {
-  @override
-  Widget buildScrollbar(BuildContext context, Widget child, ScrollableDetails details) {
-    return child; // Retorna o filho diretamente, sem barra de rolagem
-  }
-}
-
-// MUDE O TIPO DA VARIÁVEL AQUI
 late MyAudioHandler audioHandler;
 
-// A função main precisa ser assíncrona para usar await
 void main() async {
-  // Garante que os bindings do Flutter estejam inicializados
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Inicializa o Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  // Inicializa o serviço de áudio e obtém a instância do handler
-  // A atribuição agora é compatível porque initAudioService retorna MyAudioHandler
+  
   audioHandler = await initAudioService();
+
+  await initializeDateFormatting('pt_BR', null);
 
   runApp(const MyApp());
 }
@@ -36,27 +23,16 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  @override
+  @override // <<<--- CORREÇÃO 2
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Chama Coral',
+      debugShowCheckedModeBanner: false,
+      title: 'Chama App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF192F3C)),
-        // textTheme: Theme.of(context).textTheme.apply(fontFamily: 'Nexa'),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
       ),
       home: const HomeScreen(),
-      debugShowCheckedModeBanner: false,
-      scrollBehavior: NoThumbScrollBehavior(),
     );
   }
 }
-
-// Para acessar o audioHandler em outras partes do seu app (por exemplo, na ContraltoScreen):
-// 1. Importe o main.dart:
-//    import 'package:chama_app/main.dart'; // Ou o caminho correto para seu main.dart
-//
-// 2. Use a variável audioHandler:
-//    audioHandler.play();
-//    audioHandler.pause();
-//    audioHandler.skipToNext();
-//    audioHandler.updatePlaylist(mediaItems); // Lembre-se desta!

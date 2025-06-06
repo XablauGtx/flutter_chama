@@ -1,256 +1,297 @@
+import 'package:chama_app/widgets/app_scaffold.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart'; // A importação de intl ainda é necessária para formatar HH:mm, mas não para o locale do calendário.
+import 'package:add_2_calendar/add_2_calendar.dart' as add2calendar;
 
-// --- Classes de Modelo ---
-
-// Classe para representar um evento do coral
-class CoralEvent {
+// Renomeamos nossa classe para evitar conflito com a do pacote add_2_calendar
+class AgendaEvent {
   final String title;
   final String description;
-  final DateTime start;
-  final DateTime end;
-  final String location;
-
-  CoralEvent({
-    required this.title,
-    required this.description,
-    required this.start,
-    required this.end,
-    this.location = 'Local não especificado', // Valor padrão
-  });
-
-  // Método para facilitar a cópia (útil se você for modificar eventos futuramente)
-  CoralEvent copyWith({
-    String? title,
-    String? description,
-    DateTime? start,
-    DateTime? end,
-    String? location,
-  }) {
-    return CoralEvent(
-      title: title ?? this.title,
-      description: description ?? this.description,
-      start: start ?? this.start,
-      end: end ?? this.end,
-      location: location ?? this.location,
-    );
-  }
+  final DateTime date;
+  AgendaEvent({required this.title, required this.description, required this.date});
 }
 
-// --- Tela da Agenda ---
-
 class AgendaScreen extends StatefulWidget {
-  const AgendaScreen({Key? key}) : super(key: key);
+  const AgendaScreen({super.key});
 
   @override
   State<AgendaScreen> createState() => _AgendaScreenState();
 }
 
 class _AgendaScreenState extends State<AgendaScreen> {
-  // Controle do calendário
-  CalendarFormat _calendarFormat = CalendarFormat.month;
+  bool _isCalendarView = true;
+  Map<DateTime, List<AgendaEvent>> _eventsByDay = {};
+  List<AgendaEvent> _allEventsSorted = [];
+
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-
-  // Mapa para armazenar eventos por data.
-  // A chave é uma data normalizada (apenas ano, mês, dia)
-  // para que os eventos sejam agrupados corretamente.
-  Map<DateTime, List<CoralEvent>> _events = {};
+  List<AgendaEvent> _selectedEvents = [];
 
   @override
   void initState() {
     super.initState();
-    _selectedDay = _focusedDay; // Inicia com o dia atual selecionado
-    _loadCoralEvents(); // Carrega os eventos do coral ao iniciar a tela
+    _selectedDay = _focusedDay;
+    _fetchEvents();
   }
 
-  // Função para carregar os eventos do coral
-  // No futuro, você obterá esses dados de uma API, Firebase, etc.
-  void _loadCoralEvents() {
-    final now = DateTime.now();
-    // Exemplo de eventos "hardcoded" para demonstração:
-    _events = {
-      // Evento para amanhã
-      DateTime.utc(now.year, now.month, now.day + 1): [
-        CoralEvent(
-          title: 'Ensaio Vozes e Instrumentos',
-          description: 'Ensaio geral para a missa de domingo. Trazer partituras.',
-          start: DateTime.utc(now.year, now.month, now.day + 1, 19, 30),
-          end: DateTime.utc(now.year, now.month, now.day + 1, 21, 0),
-          location: 'Salão Paroquial',
-        ),
-      ],
-      // Evento para daqui a 3 dias
-      DateTime.utc(now.year, now.month, now.day + 3): [
-        CoralEvent(
-          title: 'Missa Especial de Ação de Graças',
-          description: 'Participação do coral na missa das 10h. Chegar 30 min antes.',
-          start: DateTime.utc(now.year, now.month, now.day + 3, 10, 0),
-          end: DateTime.utc(now.year, now.month, now.day + 3, 11, 30),
-          location: 'Igreja Matriz Nossa Senhora do Rosário',
-        ),
-      ],
-      // Múltiplos eventos para a próxima semana
-      DateTime.utc(now.year, now.month, now.day + 7): [
-        CoralEvent(
-          title: 'Reunião de Planejamento - Natal',
-          description: 'Discussão do repertório e logística para as celebrações de Natal.',
-          start: DateTime.utc(now.year, now.month, now.day + 7, 18, 0),
-          end: DateTime.utc(now.year, now.month, now.day + 7, 19, 0),
-          location: 'Sala de Reuniões da Secretaria',
-        ),
-        CoralEvent(
-          title: 'Ensaio Adicional - Sopranos',
-          description: 'Foco em passagens específicas para o naipe de sopranos.',
-          start: DateTime.utc(now.year, now.month, now.day + 7, 19, 15),
-          end: DateTime.utc(now.year, now.month, now.day + 7, 20, 30),
-          location: 'Auditório da Igreja',
-        ),
-      ],
-    };
-    setState(() {}); // Atualiza a UI para exibir os eventos carregados
+  void _fetchEvents() {
+    FirebaseFirestore.instance.collection('agenda').orderBy('data').snapshots().listen((snapshot) {
+      final Map<DateTime, List<AgendaEvent>> eventsSource = {};
+      final List<AgendaEvent> allEvents = [];
+
+      for (var doc in snapshot.docs) {
+        final eventData = doc.data();
+        final eventDate = (eventData['data'] as Timestamp).toDate();
+        final dayOnly = DateTime.utc(eventDate.year, eventDate.month, eventDate.day);
+
+        final event = AgendaEvent(
+          title: eventData['titulo'] ?? 'Sem título',
+          description: eventData['descricao'] ?? '',
+          date: eventDate,
+        );
+        
+        allEvents.add(event);
+
+        if (eventsSource[dayOnly] == null) {
+          eventsSource[dayOnly] = [];
+        }
+        eventsSource[dayOnly]!.add(event);
+      }
+      if(mounted) {
+        setState(() {
+          _eventsByDay = eventsSource;
+          _allEventsSorted = allEvents;
+          _onDaySelected(_selectedDay!, _focusedDay);
+        });
+      }
+    });
   }
 
-  // Retorna a lista de eventos para um dia específico.
-  // Garante que a data passada seja normalizada para corresponder às chaves do mapa.
-  List<CoralEvent> _getEventsForDay(DateTime day) {
-    return _events[DateTime.utc(day.year, day.month, day.day)] ?? [];
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    if(mounted){
+      setState(() {
+        _selectedDay = selectedDay;
+        _focusedDay = focusedDay;
+        _selectedEvents = _getEventsForDay(selectedDay);
+      });
+    }
+  }
+
+  List<AgendaEvent> _getEventsForDay(DateTime day) {
+    final dayOnly = DateTime.utc(day.year, day.month, day.day);
+    return _eventsByDay[dayOnly] ?? [];
+  }
+
+  // --- FUNÇÃO ATUALIZADA COM FEEDBACK PARA O USUÁRIO ---
+  Future<void> _addToPersonalCalendar(AgendaEvent nossoEvento) async {
+    final eventoDoPacote = add2calendar.Event(
+      title: nossoEvento.title,
+      description: nossoEvento.description,
+      location: '',
+      startDate: nossoEvento.date,
+      endDate: nossoEvento.date.add(const Duration(hours: 1)),
+    );
+    
+    try {
+      final bool? success = await add2calendar.Add2Calendar.addEvent2Cal(eventoDoPacote);
+
+      if (!mounted) return;
+
+      if (success == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Evento adicionado ao calendário com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ação cancelada pelo usuário.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      print('Erro ao tentar adicionar evento ao calendário: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível abrir o aplicativo de calendário.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Agenda do Coral'),
-      ),
-      body: Column(
-        children: [
-          // Widget do Calendário
-          TableCalendar(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2030, 12, 31),
-            focusedDay: _focusedDay,
-            calendarFormat: _calendarFormat,
-            selectedDayPredicate: (day) {
-              // Usa 'isSameDay' para comparar apenas ano, mês e dia
-              return isSameDay(_selectedDay, day);
-            },
-            onDaySelected: (selectedDay, focusedDay) {
-              // Só atualiza o estado se um novo dia for selecionado
-              if (!isSameDay(_selectedDay, selectedDay)) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay; // Mantém o calendário focado no mês do dia selecionado
-                });
-              }
-            },
-            onFormatChanged: (format) {
-              // Permite mudar o formato do calendário (mês, semana, etc.)
-              if (_calendarFormat != format) {
-                setState(() {
-                  _calendarFormat = format;
-                });
-              }
-            },
-            onPageChanged: (focusedDay) {
-              // Atualiza o dia focado quando o usuário arrasta para outros meses/semanas
-              _focusedDay = focusedDay;
-            },
-            eventLoader: _getEventsForDay, // Função que carrega eventos para cada dia
-            calendarBuilders: CalendarBuilders(
-              // Construtor para marcadores de eventos (o pequeno ponto/número no dia)
-              markerBuilder: (context, date, events) {
-                if (events.isNotEmpty) {
-                  return Positioned(
-                    right: 1,
-                    bottom: 1,
-                    child: _buildEventsMarker(events.length),
-                  );
-                }
-                return null;
-              },
-            ),
-            // Remova a linha abaixo:
-            // locale: 'pt_BR', // Agora o calendário usará o locale padrão do dispositivo
+    return AppScaffold(
+      title: 'Agenda',
+      actions: [
+        IconButton(
+          icon: Icon(_isCalendarView ? Icons.view_list_outlined : Icons.calendar_today_outlined),
+          tooltip: _isCalendarView ? 'Ver em lista' : 'Ver em calendário',
+          onPressed: () {
+            setState(() {
+              _isCalendarView = !_isCalendarView;
+            });
+          },
+        ),
+      ],
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/wallpaper.png'),
+            fit: BoxFit.cover,
           ),
-          const SizedBox(height: 8.0),
-          // Lista de eventos para o dia selecionado
-          Expanded(
-            child: _selectedDay == null
-                ? const Center(child: Text('Selecione um dia para ver os eventos do coral.'))
-                : _getEventsForDay(_selectedDay!).isEmpty
-                    ? Center(
-                        child: Text(
-                          'Nenhum evento agendado para ${DateFormat('dd/MM/yyyy').format(_selectedDay!)}.',
-                          style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey[700]),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: _getEventsForDay(_selectedDay!).length,
-                        itemBuilder: (context, index) {
-                          final event = _getEventsForDay(_selectedDay!)[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    event.title,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16.0,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4.0),
-                                  Text(
-                                    '${DateFormat('HH:mm').format(event.start)} - ${DateFormat('HH:mm').format(event.end)}',
-                                    style: TextStyle(fontSize: 14.0, color: Colors.grey[700]),
-                                  ),
-                                  Text(
-                                    'Local: ${event.location}',
-                                    style: TextStyle(fontSize: 14.0, color: Colors.grey[700]),
-                                  ),
-                                  if (event.description.isNotEmpty) ...[
-                                    const SizedBox(height: 4.0),
-                                    Text(
-                                      event.description,
-                                      style: const TextStyle(fontSize: 14.0),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-          ),
-        ],
+        ),
+        child: _isCalendarView ? _buildCalendarView() : _buildTimelineView(),
       ),
     );
   }
 
-  // Widget auxiliar para construir o marcador de eventos no calendário
-  Widget _buildEventsMarker(int eventCount) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Theme.of(context).primaryColor, // Usa a cor primária do seu tema
-      ),
-      width: 18.0,
-      height: 18.0,
-      child: Center(
-        child: Text(
-          '$eventCount',
-          style: const TextStyle().copyWith(
-            color: Colors.white,
-            fontSize: 12.0,
-            fontWeight: FontWeight.bold,
+  Widget _buildCalendarView() {
+    return Column(
+      children: [
+        TableCalendar<AgendaEvent>(
+          locale: 'pt_BR',
+          firstDay: DateTime.utc(2020, 1, 1),
+          lastDay: DateTime.utc(2030, 12, 31),
+          focusedDay: _focusedDay,
+          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+          onDaySelected: _onDaySelected,
+          eventLoader: _getEventsForDay,
+          calendarStyle: CalendarStyle(
+            defaultTextStyle: const TextStyle(color: Colors.white),
+            weekendTextStyle: const TextStyle(color: Colors.white70),
+            selectedDecoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+            todayDecoration: BoxDecoration(color: Colors.red.withOpacity(0.5), shape: BoxShape.circle),
+            markerDecoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+          ),
+          headerStyle: const HeaderStyle(
+            titleCentered: true,
+            formatButtonVisible: false,
+            titleTextStyle: TextStyle(color: Colors.white, fontSize: 18),
+            leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
+            rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
+          ),
+          daysOfWeekStyle: const DaysOfWeekStyle(
+            weekdayStyle: TextStyle(color: Colors.white),
+            weekendStyle: TextStyle(color: Colors.white),
           ),
         ),
-      ),
+        const Divider(color: Colors.white30, height: 1),
+        const Padding(
+          padding: EdgeInsets.all(12.0),
+          child: Text("Eventos do Dia Selecionado", style: TextStyle(color: Colors.white, fontFamily: 'Nexa', fontSize: 16)),
+        ),
+        Expanded(
+          child: _selectedEvents.isEmpty
+            ? const Center(
+                child: Text('Nenhum evento para este dia.', style: TextStyle(color: Colors.white)),
+              )
+            : ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            itemCount: _selectedEvents.length,
+            itemBuilder: (context, index) {
+              final event = _selectedEvents[index];
+              return Card(
+                color: const Color(0xFF192F3C).withOpacity(0.9),
+                child: ListTile(
+                  leading: Text(DateFormat('HH:mm').format(event.date), style: const TextStyle(color: Colors.white70, fontSize: 14)),
+                  title: Text(event.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: event.description.isNotEmpty ? Text(event.description, style: const TextStyle(color: Colors.white70)) : null,
+                  trailing: IconButton(
+                    icon: const Icon(Icons.add_alert_outlined, color: Colors.white70),
+                    tooltip: 'Adicionar à agenda pessoal',
+                    onPressed: () => _addToPersonalCalendar(event),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimelineView() {
+    if (_allEventsSorted.isEmpty) {
+      return const Center(
+        child: Text('Nenhum evento na agenda.', style: TextStyle(color: Colors.white, fontSize: 16)),
+      );
+    }
+    
+    String? lastDateHeader;
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      itemCount: _allEventsSorted.length,
+      itemBuilder: (context, index) {
+        final event = _allEventsSorted[index];
+        final eventDateHeader = DateFormat.yMMMMd('pt_BR').format(event.date);
+        final bool showHeader = index == 0 || !isSameDay(_allEventsSorted[index - 1].date, event.date);
+        lastDateHeader = eventDateHeader;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 60,
+              child: Column(
+                children: [
+                  if (showHeader)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 24.0, bottom: 16.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            DateFormat('dd').format(event.date),
+                            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            DateFormat('E', 'pt_BR').format(event.date).toUpperCase(),
+                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  Container(
+                    margin: EdgeInsets.only(top: showHeader ? 4 : 20),
+                    width: 2,
+                    height: 100,
+                    color: Colors.white.withOpacity(0.3),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(top: showHeader ? 20 : 8, bottom: 8),
+                child: Card(
+                  color: const Color(0xFF192F3C).withOpacity(0.9),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: ListTile(
+                     title: Text(event.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                     subtitle: Text(
+                       '${DateFormat('HH:mm').format(event.date)} - ${event.description}',
+                       style: const TextStyle(color: Colors.white70),
+                     ),
+                     trailing: IconButton(
+                       icon: const Icon(Icons.add_alert_outlined, color: Colors.white70),
+                       tooltip: 'Adicionar à agenda pessoal',
+                       onPressed: () => _addToPersonalCalendar(event),
+                     ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
