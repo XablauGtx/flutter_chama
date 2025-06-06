@@ -1,44 +1,170 @@
-// lib/screens/banda_screen.dart
 import 'package:flutter/material.dart';
+import 'package:chama_app/screens/banda/Violao.dart';
+import 'package:chama_app/screens/kitvoz/quatro_vozes_acapella.dart';
+import 'package:chama_app/screens/kitvoz/sopranos.dart';
+import 'package:chama_app/screens/kitvoz/contralto.dart';
+import 'package:chama_app/screens/kitvoz/tenores.dart';
+import 'package:chama_app/screens/kitvoz/baixos.dart';
+import 'package:chama_app/widgets/app_scaffold.dart'; // <<<--- IMPORT DO NOSSO AppScaffold
 
 class BandaScreen extends StatelessWidget {
   const BandaScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Banda',
-          style: TextStyle(
-            fontFamily: 'Nexa',
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF192F3C),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
+    // --- A TELA AGORA USA O AppScaffold ---
+    return AppScaffold(
+      title: 'Chama Coral', // Título que será exibido no AppBar do AppScaffold
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/wallpaper.png'),
+            image: AssetImage('assets/images/wallpaper.png'), // Seu wallpaper de fundo
             fit: BoxFit.cover,
           ),
         ),
-        child: const Center(
-          child: Text(
-            'Esta é a tela da Banda!',
-            style: TextStyle(
-              fontFamily: 'Nexa',
-              color: Colors.white,
-              fontSize: 24,
+        child: ListView(
+          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+          children: [
+            const SizedBox(height: 20),
+            buildNaipeCard(
+              context,
+              'Agenda Banda',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const QuatroVozesAcapellaScreen()),
+              ),
             ),
+            const SizedBox(height: 20),
+            buildNaipeCard(
+              context,
+              'Musicas Completas',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SopranoScreen()),
+              ),
+            ),
+            const SizedBox(height: 20),
+            buildNaipeCard(
+              context,
+              'Piano',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ContraltoScreen()),
+              ),
+            ),
+            const SizedBox(height: 20),
+            buildNaipeCard(
+              context,
+              'Harmond',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TenoresScreen()),
+              ),
+            ),
+            const SizedBox(height: 20),
+            buildNaipeCard(
+              context,
+              'Violão',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ViolaoScreen()),
+              ),
+            ),
+            const SizedBox(height: 20),
+            buildNaipeCard(
+              context,
+              'Guitarra 1',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const BaixoScreen()),
+              ),
+            ),
+            const SizedBox(height: 20),
+            buildNaipeCard(
+              context,
+              'Guitarra 2',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const BaixoScreen()),
+              ),
+            ),
+            const SizedBox(height: 20),
+            buildNaipeCard(
+              context,
+              'C. Baixo',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const BaixoScreen()),
+              ),
+            ),
+            const SizedBox(height: 20),
+            buildNaipeCard(
+              context,
+              'Bateria',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const BaixoScreen()),
+              ),
+            ),
+            const SizedBox(height: 20),
+            buildNaipeCard(
+              context,
+              'Strings',
+              Icons.arrow_forward_ios,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const BaixoScreen()),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget para construir cada cartão de naipe (continua igual)
+  Widget buildNaipeCard(BuildContext context, String label, IconData iconData, VoidCallback? onPressed) {
+    return Card(
+      color: const Color(0xFF192F3C), // Cor de fundo do cartão
+      elevation: 5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10), // Bordas arredondadas
+      ),
+      child: InkWell( // Permite que o cartão seja clicável
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 25.0, horizontal: 20.0),
+          child: Row(
+            children: [
+              const Icon(Icons.music_note, color: Colors.red, size: 40), // Placeholder de ícone
+              const SizedBox(width: 15),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontFamily: 'Nexa',
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Icon(
+                iconData, // Ícone da câmera
+                color: Colors.white,
+                size: 30,
+              ),
+            ],
           ),
         ),
       ),

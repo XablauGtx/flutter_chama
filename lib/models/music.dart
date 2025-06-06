@@ -5,12 +5,14 @@ class Music {
   final String titulo;
   final String url;
   final String? letra;
+   final String? cifraUrl;
 
   Music({
     required this.id,
     required this.titulo,
     required this.url,
     this.letra,
+    this.cifraUrl,
   });
 
   factory Music.fromFirestore(DocumentSnapshot doc) {
@@ -20,6 +22,7 @@ class Music {
       titulo: data['titulo'] ?? 'Música desconhecida',
       url: data['url'] ?? '',
       letra: data['letra'],
+      cifraUrl: data['cifraUrl'],
     );
   }
 }
