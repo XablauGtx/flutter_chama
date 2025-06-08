@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:chama_app/helpers/dialog_helpers.dart'; // Importa a função de senha
 import 'package:chama_app/screens/recados_screen.dart';
-import 'package:chama_app/screens/agenda_screen.dart';
+import 'package:chama_app/agenda/agenda_screen.dart';
 import 'package:chama_app/screens/kits_de_voz_screen.dart';
 import 'package:chama_app/screens/letras_screen.dart';
 import 'package:chama_app/screens/banda_screen.dart';

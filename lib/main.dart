@@ -3,7 +3,7 @@ import 'package:chama_app/home_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart'; // <<<--- CORREÇÃO 1
-import 'audio_handler.dart';
+import 'models/audio_handler.dart';
 
 late MyAudioHandler audioHandler;
 

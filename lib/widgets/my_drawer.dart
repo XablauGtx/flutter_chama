@@ -4,7 +4,7 @@ import 'package:chama_app/helpers/dialog_helpers.dart'; // Importa a função de
 // Imports para todas as telas que estarão no menu
 import 'package:chama_app/home_screen.dart';
 import 'package:chama_app/screens/recados_screen.dart';
-import 'package:chama_app/screens/agenda_screen.dart';
+import 'package:chama_app/agenda/agenda_screen.dart';
 import 'package:chama_app/screens/kits_de_voz_screen.dart';
 import 'package:chama_app/screens/letras_screen.dart';
 import 'package:chama_app/screens/banda_screen.dart';

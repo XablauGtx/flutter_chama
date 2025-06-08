@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:chama_app/agenda/agenda_banda_screen.dart';
+import 'package:chama_app/screens/banda/Piano.dart';
+import 'package:chama_app/screens/banda/Baixo.dart';
+import 'package:chama_app/screens/banda/Bateria.dart';
+import 'package:chama_app/screens/banda/Guitarra_1.dart';
+import 'package:chama_app/screens/banda/Guitarra_2.dart';
+import 'package:chama_app/screens/banda/Harmond.dart';
+import 'package:chama_app/screens/banda/MusicasCompletas.dart';
+import 'package:chama_app/screens/banda/Strings.dart';
 import 'package:chama_app/screens/banda/Violao.dart';
-import 'package:chama_app/screens/kitvoz/quatro_vozes_acapella.dart';
-import 'package:chama_app/screens/kitvoz/sopranos.dart';
-import 'package:chama_app/screens/kitvoz/contralto.dart';
-import 'package:chama_app/screens/kitvoz/tenores.dart';
-import 'package:chama_app/screens/kitvoz/baixos.dart';
 import 'package:chama_app/widgets/app_scaffold.dart'; // <<<--- IMPORT DO NOSSO AppScaffold
 
 class BandaScreen extends StatelessWidget {
@@ -32,7 +36,7 @@ class BandaScreen extends StatelessWidget {
               Icons.arrow_forward_ios,
               () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const QuatroVozesAcapellaScreen()),
+                MaterialPageRoute(builder: (context) => const AgendaBandaScreen()),
               ),
             ),
             const SizedBox(height: 20),
@@ -42,7 +46,7 @@ class BandaScreen extends StatelessWidget {
               Icons.arrow_forward_ios,
               () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SopranoScreen()),
+                MaterialPageRoute(builder: (context) => const MusicasCompletasScreen()),
               ),
             ),
             const SizedBox(height: 20),
@@ -52,7 +56,7 @@ class BandaScreen extends StatelessWidget {
               Icons.arrow_forward_ios,
               () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ContraltoScreen()),
+                MaterialPageRoute(builder: (context) => const PianoScreen()),
               ),
             ),
             const SizedBox(height: 20),
@@ -62,7 +66,7 @@ class BandaScreen extends StatelessWidget {
               Icons.arrow_forward_ios,
               () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const TenoresScreen()),
+                MaterialPageRoute(builder: (context) => const HarmondScreen()),
               ),
             ),
             const SizedBox(height: 20),
@@ -82,7 +86,7 @@ class BandaScreen extends StatelessWidget {
               Icons.arrow_forward_ios,
               () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const BaixoScreen()),
+                MaterialPageRoute(builder: (context) => const Guitarra_1Screen()),
               ),
             ),
             const SizedBox(height: 20),
@@ -92,7 +96,7 @@ class BandaScreen extends StatelessWidget {
               Icons.arrow_forward_ios,
               () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const BaixoScreen()),
+                MaterialPageRoute(builder: (context) => const Guitarra_2Screen()),
               ),
             ),
             const SizedBox(height: 20),
@@ -102,7 +106,7 @@ class BandaScreen extends StatelessWidget {
               Icons.arrow_forward_ios,
               () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const BaixoScreen()),
+                MaterialPageRoute(builder: (context) => const CBaixoScreen()),
               ),
             ),
             const SizedBox(height: 20),
@@ -112,7 +116,7 @@ class BandaScreen extends StatelessWidget {
               Icons.arrow_forward_ios,
               () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const BaixoScreen()),
+                MaterialPageRoute(builder: (context) => const BateriaScreen()),
               ),
             ),
             const SizedBox(height: 20),
@@ -122,7 +126,7 @@ class BandaScreen extends StatelessWidget {
               Icons.arrow_forward_ios,
               () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const BaixoScreen()),
+                MaterialPageRoute(builder: (context) => const StringsScreen()),
               ),
             ),
           ],
