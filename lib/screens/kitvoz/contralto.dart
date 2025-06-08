@@ -1,3 +1,5 @@
+// ARQUIVO: contralto_screen.dart (e outras telas de Kit de Voz)
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:audio_service/audio_service.dart';
@@ -22,7 +24,6 @@ class ContraltoScreen extends StatefulWidget {
 }
 
 class _ContraltoScreenState extends State<ContraltoScreen> {
-  // --- VARIÁVEL PARA CONTROLE DE LOADING ---
   bool _isLoading = true;
 
   Stream<MediaState> get _mediaStateStream =>
@@ -40,10 +41,11 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
   }
 
   void _loadAndSetPlaylist() {
+    const playlistId = 'contralto';
     final currentQueue = audioHandler.queue.value;
     if (currentQueue.isNotEmpty) {
-      final currentNaipe = currentQueue.first.extras?['naipe'] as String?;
-      if (currentNaipe == 'contralto') {
+      final currentPlaylistId = currentQueue.first.extras?['playlistId'] as String?;
+      if (currentPlaylistId == playlistId) {
         if(mounted) setState(() { _isLoading = false; });
         return;
       }
@@ -53,7 +55,7 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
     
     FirebaseFirestore.instance
         .collection('naipes')
-        .doc('contralto')
+        .doc(playlistId)
         .collection('musicas')
         .get()
         .then((snapshot) {
@@ -64,7 +66,12 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
               .map((music) => MediaItem(
                     id: music.id,
                     title: music.titulo,
-                    extras: {'url': music.url, 'letra': music.letra, 'naipe': 'contralto'},
+                    extras: {
+                      'url': music.url,
+                      'letra': music.letra,
+                      'cifraUrl': music.cifraUrl,
+                      'playlistId': playlistId,
+                    },
                   ))
               .toList();
           if (mediaItems.isNotEmpty) {
@@ -183,7 +190,6 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
                                   Text(_formatDuration(total), style: const TextStyle(color: Colors.white)),
                                 ]),
                             const SizedBox(height: 10),
-                            // --- LINHA DE BOTÕES ATUALIZADA ---
                             StreamBuilder<PlaybackState>(
                               stream: audioHandler.playbackState,
                               builder: (context, snapshot) {
@@ -223,7 +229,7 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.shuffle, color: Colors.white54),
-                                      onPressed: () {}, // Ação de shuffle (a ser implementada no futuro)
+                                      onPressed: () {}, 
                                     ),
                                   ],
                                 );
@@ -262,6 +268,7 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
                                           children: [
                                             IconButton(
                                               icon: const Icon(Icons.lyrics_outlined, color: Colors.white),
+                                              tooltip: 'Ver Letra',
                                               onPressed: () {
                                                  final lyrics = mediaItem.extras?['letra'] as String?;
                                                   if (lyrics != null && lyrics.isNotEmpty) {

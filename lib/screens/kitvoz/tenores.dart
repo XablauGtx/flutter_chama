@@ -39,42 +39,50 @@ class _TenoresScreenState extends State<TenoresScreen> {
   }
 
   void _loadAndSetPlaylist() {
+    const playlistId = 'tenor'; // <<<--- ID para esta tela
     final currentQueue = audioHandler.queue.value;
     if (currentQueue.isNotEmpty) {
-      final currentNaipe = currentQueue.first.extras?['naipe'] as String?;
-      if (currentNaipe == 'tenor') {
-        if(mounted) setState(() { _isLoading = false; });
+      final currentPlaylistId = currentQueue.first.extras?['playlistId'] as String?;
+      if (currentPlaylistId == playlistId) {
+        print("A playlist de $playlistId já está carregada.");
+        if (mounted) setState(() { _isLoading = false; });
         return;
       }
     }
     
-    if(mounted) setState(() { _isLoading = true; });
+    if (mounted) setState(() { _isLoading = true; });
     
     FirebaseFirestore.instance
         .collection('naipes')
-        .doc('tenor')
+        .doc(playlistId) // <<<--- Usando a variável
         .collection('musicas')
         .get()
         .then((snapshot) {
-          if (!mounted) return;
-          final musicList = snapshot.docs.map((doc) => Music.fromFirestore(doc)).toList();
-          final validMusicList = musicList.where((music) => music.url.isNotEmpty && Uri.tryParse(music.url) != null);
-          final mediaItems = validMusicList
-              .map((music) => MediaItem(
-                    id: music.id,
-                    title: music.titulo,
-                    extras: {'url': music.url, 'letra': music.letra, 'naipe': 'tenor'},
-                  ))
-              .toList();
-          if (mediaItems.isNotEmpty) {
-            audioHandler.updatePlaylist(mediaItems);
-          }
-        })
-        .whenComplete(() {
-          if (mounted) {
-            setState(() { _isLoading = false; });
-          }
-        });
+      if (!mounted) return;
+      final musicList = snapshot.docs.map((doc) => Music.fromFirestore(doc)).toList();
+      final validMusicList = musicList.where((music) => music.url.isNotEmpty && Uri.tryParse(music.url) != null);
+      
+      final mediaItems = validMusicList
+          .map((music) => MediaItem(
+                id: music.id,
+                title: music.titulo,
+                extras: {
+                  'url': music.url,
+                  'letra': music.letra,
+                  'cifraUrl': music.cifraUrl,
+                  'playlistId': playlistId, // <<<--- Usando a variável
+                },
+              ))
+          .toList();
+      if (mediaItems.isNotEmpty) {
+        audioHandler.updatePlaylist(mediaItems);
+      }
+    })
+    .whenComplete(() {
+      if (mounted) {
+        setState(() { _isLoading = false; });
+      }
+    });
   }
 
   String _formatDuration(Duration duration) {
@@ -137,7 +145,7 @@ class _TenoresScreenState extends State<TenoresScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'Kit Voz - Tenores',
+      title: 'Kit Voz - Tenores', // <<<--- Título atualizado
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : Container(
@@ -260,6 +268,7 @@ class _TenoresScreenState extends State<TenoresScreen> {
                                           children: [
                                             IconButton(
                                               icon: const Icon(Icons.lyrics_outlined, color: Colors.white),
+                                              tooltip: 'Ver Letra',
                                               onPressed: () {
                                                  final lyrics = mediaItem.extras?['letra'] as String?;
                                                   if (lyrics != null && lyrics.isNotEmpty) {

@@ -39,10 +39,11 @@ class _QuatroVozesAcapellaScreenState extends State<QuatroVozesAcapellaScreen> {
   }
 
   void _loadAndSetPlaylist() {
+    const playlistId = '4vozesacapella'; // Padronizado
     final currentQueue = audioHandler.queue.value;
     if (currentQueue.isNotEmpty) {
-      final currentNaipe = currentQueue.first.extras?['naipe'] as String?;
-      if (currentNaipe == '4vozesacapella') {
+      final currentPlaylistId = currentQueue.first.extras?['playlistId'] as String?;
+      if (currentPlaylistId == playlistId) {
         if(mounted) setState(() { _isLoading = false; });
         return;
       }
@@ -52,7 +53,7 @@ class _QuatroVozesAcapellaScreenState extends State<QuatroVozesAcapellaScreen> {
     
     FirebaseFirestore.instance
         .collection('naipes')
-        .doc('4vozesacapella')
+        .doc(playlistId) // Usando a variável padronizada
         .collection('musicas')
         .get()
         .then((snapshot) {
@@ -63,7 +64,12 @@ class _QuatroVozesAcapellaScreenState extends State<QuatroVozesAcapellaScreen> {
               .map((music) => MediaItem(
                     id: music.id,
                     title: music.titulo,
-                    extras: {'url': music.url, 'letra': music.letra, 'naipe': '4vozesacapella'},
+                    extras: {
+                      'url': music.url,
+                      'letra': music.letra,
+                      'cifraUrl': music.cifraUrl,
+                      'playlistId': playlistId, // Usando a variável padronizada
+                    },
                   ))
               .toList();
           if (mediaItems.isNotEmpty) {
@@ -85,7 +91,7 @@ class _QuatroVozesAcapellaScreenState extends State<QuatroVozesAcapellaScreen> {
   }
 
   void _showLyricsBottomSheet(BuildContext context, String title, String lyrics) {
-     showModalBottomSheet(
+    showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: const Color(0xFF212121),
@@ -260,6 +266,7 @@ class _QuatroVozesAcapellaScreenState extends State<QuatroVozesAcapellaScreen> {
                                           children: [
                                             IconButton(
                                               icon: const Icon(Icons.lyrics_outlined, color: Colors.white),
+                                              tooltip: 'Ver Letra',
                                               onPressed: () {
                                                  final lyrics = mediaItem.extras?['letra'] as String?;
                                                   if (lyrics != null && lyrics.isNotEmpty) {

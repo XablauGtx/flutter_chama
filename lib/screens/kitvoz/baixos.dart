@@ -39,42 +39,48 @@ class _BaixoScreenState extends State<BaixoScreen> {
   }
 
   void _loadAndSetPlaylist() {
+    const playlistId = 'baixo'; // Corrigido para 'baixos' para consistência
     final currentQueue = audioHandler.queue.value;
     if (currentQueue.isNotEmpty) {
-      final currentNaipe = currentQueue.first.extras?['naipe'] as String?;
-      if (currentNaipe == 'baixo') {
-        if(mounted) setState(() { _isLoading = false; });
+      final currentPlaylistId = currentQueue.first.extras?['playlistId'] as String?;
+      if (currentPlaylistId == playlistId) {
+        if (mounted) setState(() { _isLoading = false; });
         return;
       }
     }
-    
-    if(mounted) setState(() { _isLoading = true; });
-    
+
+    if (mounted) setState(() { _isLoading = true; });
+
     FirebaseFirestore.instance
         .collection('naipes')
-        .doc('baixo')
+        .doc(playlistId)
         .collection('musicas')
         .get()
         .then((snapshot) {
-          if (!mounted) return;
-          final musicList = snapshot.docs.map((doc) => Music.fromFirestore(doc)).toList();
-          final validMusicList = musicList.where((music) => music.url.isNotEmpty && Uri.tryParse(music.url) != null);
-          final mediaItems = validMusicList
-              .map((music) => MediaItem(
-                    id: music.id,
-                    title: music.titulo,
-                    extras: {'url': music.url, 'letra': music.letra, 'naipe': 'baixo'},
-                  ))
-              .toList();
-          if (mediaItems.isNotEmpty) {
-            audioHandler.updatePlaylist(mediaItems);
-          }
-        })
-        .whenComplete(() {
-          if (mounted) {
-            setState(() { _isLoading = false; });
-          }
-        });
+      if (!mounted) return;
+      final musicList = snapshot.docs.map((doc) => Music.fromFirestore(doc)).toList();
+      final validMusicList = musicList.where((music) => music.url.isNotEmpty && Uri.tryParse(music.url) != null);
+      
+      final mediaItems = validMusicList
+          .map((music) => MediaItem(
+                id: music.id,
+                title: music.titulo,
+                extras: {
+                  'url': music.url,
+                  'letra': music.letra,
+                  'cifraUrl': music.cifraUrl,
+                  'playlistId': playlistId,
+                },
+              ))
+          .toList();
+      if (mediaItems.isNotEmpty) {
+        audioHandler.updatePlaylist(mediaItems);
+      }
+    }).whenComplete(() {
+      if (mounted) {
+        setState(() { _isLoading = false; });
+      }
+    });
   }
 
   String _formatDuration(Duration duration) {
@@ -85,7 +91,7 @@ class _BaixoScreenState extends State<BaixoScreen> {
   }
 
   void _showLyricsBottomSheet(BuildContext context, String title, String lyrics) {
-     showModalBottomSheet(
+    showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: const Color(0xFF212121),
@@ -258,8 +264,10 @@ class _BaixoScreenState extends State<BaixoScreen> {
                                       ? Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
+                                            // --- BOTÃO CORRETO PARA LETRA ---
                                             IconButton(
                                               icon: const Icon(Icons.lyrics_outlined, color: Colors.white),
+                                              tooltip: 'Ver Letra',
                                               onPressed: () {
                                                  final lyrics = mediaItem.extras?['letra'] as String?;
                                                   if (lyrics != null && lyrics.isNotEmpty) {

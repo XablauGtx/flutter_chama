@@ -39,10 +39,11 @@ class _QuatroVozesScreenState extends State<QuatroVozesScreen> {
   }
 
   void _loadAndSetPlaylist() {
+    const playlistId = '4vozes'; // Padronizado
     final currentQueue = audioHandler.queue.value;
     if (currentQueue.isNotEmpty) {
-      final currentNaipe = currentQueue.first.extras?['naipe'] as String?;
-      if (currentNaipe == '4vozes') {
+      final currentPlaylistId = currentQueue.first.extras?['playlistId'] as String?;
+      if (currentPlaylistId == playlistId) {
         if(mounted) setState(() { _isLoading = false; });
         return;
       }
@@ -52,7 +53,7 @@ class _QuatroVozesScreenState extends State<QuatroVozesScreen> {
     
     FirebaseFirestore.instance
         .collection('naipes')
-        .doc('4vozes')
+        .doc(playlistId)
         .collection('musicas')
         .get()
         .then((snapshot) {
@@ -63,7 +64,12 @@ class _QuatroVozesScreenState extends State<QuatroVozesScreen> {
               .map((music) => MediaItem(
                     id: music.id,
                     title: music.titulo,
-                    extras: {'url': music.url, 'letra': music.letra, 'naipe': '4vozes'},
+                    extras: {
+                      'url': music.url,
+                      'letra': music.letra,
+                      'cifraUrl': music.cifraUrl,
+                      'playlistId': playlistId,
+                    },
                   ))
               .toList();
           if (mediaItems.isNotEmpty) {
@@ -137,7 +143,7 @@ class _QuatroVozesScreenState extends State<QuatroVozesScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'Kit Voz - 4 Vozes',
+      title: 'Kit Voz - 4 Vozes Acapella',
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
           : Container(
@@ -260,6 +266,7 @@ class _QuatroVozesScreenState extends State<QuatroVozesScreen> {
                                           children: [
                                             IconButton(
                                               icon: const Icon(Icons.lyrics_outlined, color: Colors.white),
+                                              tooltip: 'Ver Letra',
                                               onPressed: () {
                                                  final lyrics = mediaItem.extras?['letra'] as String?;
                                                   if (lyrics != null && lyrics.isNotEmpty) {
