@@ -1,5 +1,5 @@
 import 'package:chama_app/firebase_options.dart';
-import 'package:chama_app/home_screen.dart'; 
+import 'package:chama_app/home_screen.dart'; // Mantive o nome da sua tela principal
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart'; // <<<--- CORREÇÃO 1
@@ -29,7 +29,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Chama App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        // Mantive o seu tema original
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF192F3C)),
         useMaterial3: true,
       ),
       home: const HomeScreen(),
