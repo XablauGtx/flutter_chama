@@ -11,7 +11,7 @@ import 'package:chama_app/screens/banda_screen.dart';
 import 'package:chama_app/screens/cifras_screen.dart';
 import 'package:chama_app/screens/oracao_screen.dart';
 import 'package:chama_app/screens/chamada_chama.dart';
-// Note que o import de partituras_screen não é mais necessário aqui, pois a navegação é feita dentro do dialog_helpers
+import 'package:flutter_svg/flutter_svg.dart'; 
 
 class MyDrawer extends StatelessWidget {
   const MyDrawer({super.key});
@@ -24,19 +24,16 @@ class MyDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: <Widget>[
           DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.3),
-              image: const DecorationImage(
-                image: AssetImage("assets/images/chama_coral.png"),
-                fit: BoxFit.contain,
-                opacity: 0.5,
-              ),
-            ),
-            child: const Text(
-              'Chama Coral',
-              style: TextStyle(color: Colors.white, fontSize: 24, fontFamily: 'Nexa'),
-            ),
-          ),
+            decoration: const BoxDecoration(
+                 color: Color(0xFF192F3C), // A cor de fundo do seu AppBar
+      ),
+            child: Center( // Usamos um Center para garantir que o logo fique centralizado
+              child: SvgPicture.asset(
+               'assets/images/chama_coral4.svg', // <<<--- Coloque o caminho para o seu novo logo SVG aqui
+                height: 200, // Ajuste a altura conforme desejar
+         ),
+       ),
+      ),
           _buildDrawerItem(
             icon: Icons.home,
             text: 'Início',

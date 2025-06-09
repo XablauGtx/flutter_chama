@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:chama_app/helpers/dialog_helpers.dart'; // Importa a função de senha
+
+// Imports das telas
 import 'package:chama_app/screens/recados_screen.dart';
 import 'package:chama_app/agenda/agenda_screen.dart';
 import 'package:chama_app/screens/kits_de_voz_screen.dart';
@@ -9,106 +10,33 @@ import 'package:chama_app/screens/banda_screen.dart';
 import 'package:chama_app/screens/cifras_screen.dart';
 import 'package:chama_app/screens/oracao_screen.dart';
 import 'package:chama_app/screens/chamada_chama.dart';
+
+// Imports dos widgets reutilizáveis
+import 'package:chama_app/helpers/dialog_helpers.dart';
 import 'package:chama_app/widgets/my_drawer.dart';
+import 'package:chama_app/widgets/info_drawer.dart';
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  void btnRecados(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const RecadosScreen()));
-    debugPrint('Botão Recados pressionado e navegando!');
-  }
-
-  void btnAgenda(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const AgendaScreen()));
-    debugPrint('Botão Agenda pressionado e navegando!');
-  }
-
-  void btnKitVoz(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const KitsDeVozScreen()));
-    debugPrint('Botão Kits de Voz pressionado e navegando!');
-  }
-
-  void btnLetras(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const LetrasScreen()));
-    debugPrint('Botão Letras pressionado!');
-  }
-
-  void btnBanda(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const BandaScreen()));
-  }
-
-  // --- FUNÇÃO DE NAVEGAÇÃO PARA PARTITURAS ATUALIZADA ---
-  void btnPartitura(BuildContext context) {
-    showPasswordDialog(context); // Chama o pop-up de senha
-    debugPrint('Botão Partituras pressionado!');
-  }
-
-  void btnCifras(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const CifrasScreen()));
-    debugPrint('Botão Cifras pressionado!');
-  }
-
-  void btnOracao(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const OracaoScreen()));
-    debugPrint('Botão Oração pressionado!');
-  }
-
-  void btnNovoCo(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const ChamadaChamaScreen()));
-    debugPrint('Botão Novo Coralista pressionado!');
-  }
-
-  Widget buildButton({
-    required String label,
-    required String assetPath,
-    required VoidCallback onPressed,
-    double fontSize = 15,
-    bool isSvg = false,
-  }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 118,
-        height: 124,
-        decoration: BoxDecoration(
-          color: const Color(0xFF192F3C),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            isSvg
-                ? SvgPicture.asset(
-                    assetPath,
-                    height: 48,
-                    colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
-                  )
-                : Image.asset(
-                    assetPath,
-                    height: 48,
-                    color: Colors.red,
-                  ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Nexa',
-                color: Colors.white,
-                fontSize: fontSize,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  void btnRecados(BuildContext context) => Navigator.push(context, MaterialPageRoute(builder: (context) => const RecadosScreen()));
+  void btnAgenda(BuildContext context) => Navigator.push(context, MaterialPageRoute(builder: (context) => const AgendaScreen()));
+  void btnKitVoz(BuildContext context) => Navigator.push(context, MaterialPageRoute(builder: (context) => const KitsDeVozScreen()));
+  void btnLetras(BuildContext context) => Navigator.push(context, MaterialPageRoute(builder: (context) => const LetrasScreen()));
+  void btnBanda(BuildContext context) => Navigator.push(context, MaterialPageRoute(builder: (context) => const BandaScreen()));
+  void btnCifras(BuildContext context) => Navigator.push(context, MaterialPageRoute(builder: (context) => const CifrasScreen()));
+  void btnOracao(BuildContext context) => Navigator.push(context, MaterialPageRoute(builder: (context) => const OracaoScreen()));
+  void btnNovoCo(BuildContext context) => Navigator.push(context, MaterialPageRoute(builder: (context) => const ChamadaChamaScreen()));
+  
+  // Função para partituras chama o pop-up de senha
+  void btnPartitura(BuildContext context) => showPasswordDialog(context);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const MyDrawer(),
+      drawer: const MyDrawer(),      // Menu principal à esquerda
+      endDrawer: const InfoDrawer(), // <<<--- NOVO MENU DE INFO À DIREITA
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
@@ -131,15 +59,16 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white, size: 26),
-            onPressed: () {
-              debugPrint('Botão de Configurações pressionado!');
-            },
+            onPressed: () {},
           ),
-          IconButton(
-            icon: const Icon(Icons.info_outline, color: Colors.white, size: 26),
-            onPressed: () {
-              debugPrint('Botão de Informações pressionado!');
-            },
+          // --- BOTÃO DE INFORMAÇÕES ATUALIZADO ---
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.info_outline, color: Colors.white, size: 26),
+              onPressed: () {
+                Scaffold.of(context).openEndDrawer(); // <<<--- ABRE O NOVO MENU
+              },
+            ),
           ),
         ],
       ),
@@ -180,7 +109,7 @@ class HomeScreen extends StatelessWidget {
                     buildButton(label: "Partituras", assetPath: 'assets/images/partitura.svg', onPressed: () => btnPartitura(context), fontSize: 11, isSvg: true),
                     buildButton(label: "Cifras", assetPath: 'assets/images/cifra.svg', onPressed: () => btnCifras(context), isSvg: true),
                     buildButton(label: "Oração", assetPath: 'assets/images/oracao.svg', onPressed: () => btnOracao(context), fontSize: 12, isSvg: true),
-                    buildButton(label: "Chamada", assetPath: 'assets/images/novo_usuario.svg', onPressed: () => btnNovoCo(context), fontSize: 12, isSvg: true),
+                    buildButton(label: "Novo Coralista", assetPath: 'assets/images/novo_usuario.svg', onPressed: () => btnNovoCo(context), fontSize: 12, isSvg: true),
                   ],
                 ),
                 const Spacer(flex: 1),
@@ -190,6 +119,52 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget buildButton({
+    required String label,
+    required String assetPath,
+    required VoidCallback onPressed,
+    double fontSize = 15,
+    bool isSvg = false,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 118,
+        height: 124,
+        decoration: BoxDecoration(
+          color: const Color(0xFF192F3C),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            isSvg
+                ? SvgPicture.asset(
+                    assetPath,
+                    height: 48,
+                    colorFilter: const ColorFilter.mode(Colors.red, BlendMode.srcIn),
+                  )
+                : Image.asset(
+                    assetPath,
+                    height: 48,
+                    color: const Color(0xFFF44336),
+                  ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Nexa',
+                color: Colors.white,
+                fontSize: fontSize,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

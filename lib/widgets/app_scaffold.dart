@@ -1,7 +1,7 @@
 // lib/widgets/app_scaffold.dart
 
 import 'package:flutter/material.dart';
-import 'package:chama_app/widgets/my_drawer.dart'; // Importa nosso Drawer
+import 'package:chama_app/widgets/my_drawer.dart';
 
 class AppScaffold extends StatelessWidget {
   final String title;
@@ -19,16 +19,27 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // --- LÓGICA PARA SELECIONAR O PAPEL DE PAREDE ---
+    // 1. Verifica qual é o brilho do tema atual (claro ou escuro)
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    // 2. Define o caminho da imagem com base no tema
+    //    (Certifique-se de que você tem um 'wallpaper_light.png' nos seus assets)
+    final wallpaperPath = isDarkMode 
+                          ? 'assets/images/wallpaper.png' 
+                          : 'assets/images/wallpaper_light.png';
+
     return Scaffold(
-      drawer: const MyDrawer(), // O Drawer é sempre o mesmo
+      drawer: const MyDrawer(),
       appBar: AppBar(
-        title: Text(title, style: const TextStyle(fontFamily: 'Nexa', color: Colors.white)),
+        // O AppBar agora usa as cores do tema definidas no main.dart
+        title: Text(title, style: TextStyle(fontFamily: 'Nexa', color: Theme.of(context).appBarTheme.foregroundColor)),
         centerTitle: true,
-        backgroundColor: const Color(0xFF192F3C),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         leading: Builder(
           builder: (context) {
             return IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white),
+              icon: Icon(Icons.menu, color: Theme.of(context).appBarTheme.foregroundColor),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
               },
@@ -38,15 +49,13 @@ class AppScaffold extends StatelessWidget {
         bottom: bottom,
         actions: actions,
       ),
-      // --- MUDANÇA APLICADA AQUI ---
-      // O body do Scaffold agora é um Container com a imagem de fundo.
-      // O conteúdo específico da sua tela (o 'body' que passamos) é colocado como filho dele.
+      // O body do Scaffold agora usa a imagem de fundo dinâmica
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/wallpaper.png"),
+            image: AssetImage(wallpaperPath), // <<<--- USA A IMAGEM CORRETA
             fit: BoxFit.cover,
           ),
         ),

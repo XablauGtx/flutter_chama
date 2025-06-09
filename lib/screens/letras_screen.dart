@@ -1,7 +1,7 @@
-import 'dart:async'; // Import para usar o Timer (debounce)
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import para usar o Clipboard (copiar)
-import 'package:share_plus/share_plus.dart'; // Import do pacote de compartilhamento
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:chama_app/models/music.dart';
 import 'package:chama_app/widgets/app_scaffold.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,13 +18,12 @@ class _LetrasScreenState extends State<LetrasScreen> {
   List<Music> _filteredSongs = [];
   final TextEditingController _searchController = TextEditingController();
   bool _isLoading = true;
-  Timer? _debounce; // --- SUGESTÃO 2: Timer para o debounce da pesquisa ---
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _fetchAllSongs();
-    // Modificado para usar o debounce
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -32,12 +31,12 @@ class _LetrasScreenState extends State<LetrasScreen> {
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
-    _debounce?.cancel(); // Cancela o timer ao sair da tela
+    _debounce?.cancel();
     super.dispose();
   }
 
   Future<void> _fetchAllSongs() async {
-    final snapshot = await FirebaseFirestore.instance.collection('Letras').get();
+    final snapshot = await FirebaseFirestore.instance.collection('Letras').orderBy('titulo').get();
     final songs = snapshot.docs
         .map((doc) => Music.fromFirestore(doc))
         .where((music) => music.letra != null && music.letra!.isNotEmpty)
@@ -54,8 +53,6 @@ class _LetrasScreenState extends State<LetrasScreen> {
     }
   }
 
-  // --- SUGESTÃO 2: Lógica do Debounce ---
-  // Só chama o filtro 300ms depois que o usuário para de digitar
   void _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
@@ -72,31 +69,34 @@ class _LetrasScreenState extends State<LetrasScreen> {
     });
   }
 
-  // --- SUGESTÃO 1: Função para destacar o texto da pesquisa ---
   Widget _buildHighlightedText(String text, String query) {
-    if (query.isEmpty) {
-      return Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Nexa'));
-    }
+    // Pega a cor do texto principal do tema atual
+    final defaultStyle = TextStyle(
+      color: Theme.of(context).colorScheme.onSurface, 
+      fontWeight: FontWeight.bold, 
+      fontFamily: 'Nexa'
+    );
+    // Cor de destaque (pode ser personalizada para cada tema também)
+    final highlightStyle = const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontFamily: 'Nexa');
 
+    if (query.isEmpty) {
+      return Text(text, style: defaultStyle);
+    }
+    // ... (lógica de destacar texto continua a mesma)
     final spans = <TextSpan>[];
     int start = 0;
     int indexOfQuery;
 
     while ((indexOfQuery = text.toLowerCase().indexOf(query.toLowerCase(), start)) != -1) {
       if (indexOfQuery > start) {
-        spans.add(TextSpan(text: text.substring(start, indexOfQuery), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Nexa')));
+        spans.add(TextSpan(text: text.substring(start, indexOfQuery), style: defaultStyle));
       }
-      spans.add(TextSpan(
-        text: text.substring(indexOfQuery, indexOfQuery + query.length),
-        style: const TextStyle(color: Colors.yellow, fontWeight: FontWeight.bold, fontFamily: 'Nexa'), // Destaque em amarelo
-      ));
+      spans.add(TextSpan(text: text.substring(indexOfQuery, indexOfQuery + query.length), style: highlightStyle));
       start = indexOfQuery + query.length;
     }
-
     if (start < text.length) {
-      spans.add(TextSpan(text: text.substring(start), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Nexa')));
+      spans.add(TextSpan(text: text.substring(start), style: defaultStyle));
     }
-
     return RichText(text: TextSpan(children: spans));
   }
 
@@ -104,105 +104,96 @@ class _LetrasScreenState extends State<LetrasScreen> {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: 'Letras',
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/wallpaper.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                controller: _searchController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Pesquisar por título...',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                  prefixIcon: const Icon(Icons.search, color: Colors.white),
-                  filled: true,
-                  fillColor: const Color(0xFF192F3C).withOpacity(0.8),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                  suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.white),
-                        onPressed: () {
-                          _searchController.clear();
-                        },
-                      )
-                    : null,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              // Usa a cor de texto do tema
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+              decoration: InputDecoration(
+                hintText: 'Pesquisar por título...',
+                // Usa a cor de texto secundária do tema
+                hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface),
+                filled: true,
+                // Usa a cor dos cards do tema
+                fillColor: Theme.of(context).cardColor,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
                 ),
+                suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(Icons.clear, color: Theme.of(context).colorScheme.onSurface),
+                      onPressed: () {
+                        _searchController.clear();
+                      },
+                    )
+                  : null,
               ),
             ),
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                  : _filteredSongs.isEmpty
-                      ? Center(
-                          child: Text(
-                            _searchController.text.isNotEmpty ? 'Nenhum resultado para "${_searchController.text}"' : 'Nenhuma letra encontrada.',
-                            style: const TextStyle(color: Colors.white, fontSize: 18),
-                            textAlign: TextAlign.center,
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(8.0),
-                          itemCount: _filteredSongs.length,
-                          itemBuilder: (context, index) {
-                            final music = _filteredSongs[index];
-                            return Card(
-                              color: const Color(0xFF192F3C).withOpacity(0.8),
-                              margin: const EdgeInsets.symmetric(vertical: 4.0),
-                              child: ExpansionTile(
-                                // --- SUGESTÃO 1: Título com destaque ---
-                                title: _buildHighlightedText(music.titulo, _searchController.text),
-                                iconColor: Colors.white70,
-                                collapsedIconColor: Colors.white70,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                                    child: Text(
-                                      music.letra!,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(color: Colors.white, fontSize: 16, height: 1.5),
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredSongs.isEmpty
+                    ? Center(
+                        child: Text(
+                          _searchController.text.isNotEmpty ? 'Nenhum resultado para "${_searchController.text}"' : 'Nenhuma letra encontrada.',
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(8.0),
+                        itemCount: _filteredSongs.length,
+                        itemBuilder: (context, index) {
+                          final music = _filteredSongs[index];
+                          return Card(
+                            // Usa a cor de card definida no tema
+                            color: Theme.of(context).cardColor.withOpacity(0.9),
+                            margin: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: ExpansionTile(
+                              title: _buildHighlightedText(music.titulo, _searchController.text),
+                              iconColor: Theme.of(context).iconTheme.color,
+                              collapsedIconColor: Theme.of(context).iconTheme.color,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                                  child: Text(
+                                    music.letra!,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                      fontSize: 16,
+                                      height: 1.5,
                                     ),
                                   ),
-                                  // --- SUGESTÃO 3: BOTÕES DE COPIAR E COMPARTILHAR ---
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.copy, color: Colors.white70),
-                                        tooltip: 'Copiar Letra',
-                                        onPressed: () {
-                                          Clipboard.setData(ClipboardData(text: music.letra!));
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('Letra copiada para a área de transferência!')),
-                                          );
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.share, color: Colors.white70),
-                                        tooltip: 'Compartilhar Letra',
-                                        onPressed: () {
-                                          Share.share('Letra de "${music.titulo}":\n\n${music.letra!}');
-                                        },
-                                      ),
-                                    ],
-                                  )
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-            ),
-          ],
-        ),
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.copy, color: Theme.of(context).iconTheme.color),
+                                      tooltip: 'Copiar Letra',
+                                      onPressed: () { /* ... */ },
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.share, color: Theme.of(context).iconTheme.color),
+                                      tooltip: 'Compartilhar Letra',
+                                      onPressed: () { /* ... */ },
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ],
       ),
     );
   }
