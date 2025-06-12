@@ -57,6 +57,7 @@ class _ContraltoScreenState extends State<ContraltoScreen> {
         .collection('naipes')
         .doc(playlistId)
         .collection('musicas')
+        .orderBy('ordem')
         .get()
         .then((snapshot) {
           if (!mounted) return;

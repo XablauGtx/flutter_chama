@@ -55,6 +55,7 @@ class _BaixoScreenState extends State<BaixoScreen> {
         .collection('naipes')
         .doc(playlistId)
         .collection('musicas')
+        .orderBy('ordem')
         .get()
         .then((snapshot) {
       if (!mounted) return;

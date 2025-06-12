@@ -56,6 +56,7 @@ class _TenoresScreenState extends State<TenoresScreen> {
         .collection('naipes')
         .doc(playlistId)
         .collection('musicas')
+        .orderBy('ordem')
         .get()
         .then((snapshot) {
       if (!mounted) return;

@@ -5,98 +5,21 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:intl/intl.dart';
 
 import 'package:chama_app/widgets/app_scaffold.dart';
-
-// --- TELA DE DETALHES ATUALIZADA ---
-class RecadoDetailScreen extends StatelessWidget {
-  final String title;
-  final String content;
-  final DateTime date; // Recebe a data do recado
-
-  const RecadoDetailScreen({
-    super.key,
-    required this.title,
-    required this.content,
-    required this.date,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppScaffold(
-      title: "Recado",
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-        child: Column(
-          children: [
-            // Card amarelo para o conteúdo
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFD15B),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned(
-                    top: -40,
-                    left: -10,
-                    child: Icon(Icons.format_quote, size: 50, color: Colors.black.withOpacity(0.1)),
-                  ),
-                  Positioned(
-                    bottom: -40,
-                    right: -10,
-                    child: Icon(Icons.format_quote, size: 50, color: Colors.black.withOpacity(0.1)),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title, // Título dentro do card
-                        style: const TextStyle(
-                          color: Color(0xFF3D3D3D),
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Nexa'
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        content,
-                        style: const TextStyle(
-                          color: Color(0xFF3D3D3D),
-                          fontSize: 16,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        // Usa a data recebida do Firestore
-                        DateFormat("dd 'de' MMMM 'de' yyyy", 'pt_BR').format(date),
-                        style: const TextStyle(
-                          color: Colors.black54,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+import 'package:chama_app/screens/recado_detail_screen.dart'; // Certifique-se de que o caminho está correto
 
 // --- MODELO E TELA PRINCIPAL DE RECADOS ---
 class Recado {
   final String title;
   final String content;
   final String imageUrl;
-  final DateTime date; // Adicionado o campo de data
+  final DateTime date;
 
-  Recado({required this.title, required this.content, required this.imageUrl, required this.date});
+  Recado({
+    required this.title,
+    required this.content,
+    required this.imageUrl,
+    required this.date
+  });
 }
 
 class RecadosScreen extends StatefulWidget {
@@ -135,8 +58,8 @@ class _RecadosScreenState extends State<RecadosScreen> {
             return Recado(
               title: data['titulo'] ?? '',
               content: data['conteudo'] ?? '',
-              imageUrl: data['imagemUrl'] ?? '',
-              date: timestamp?.toDate() ?? DateTime.now(), // Lê a data do recado
+              imageUrl: data['imagemUrl'] ?? '', // <<<--- Lemos a URL aqui
+              date: timestamp?.toDate() ?? DateTime.now(),
             );
           }).toList();
 
@@ -160,7 +83,7 @@ class _RecadosScreenState extends State<RecadosScreen> {
                     count: recados.length,
                     effect: const WormEffect(
                       dotColor: Colors.white54,
-                      activeDotColor: Colors.white,
+                      activeDotColor: Colors.red, // Corrigido para vermelho para combinar com o tema
                       dotHeight: 8,
                       dotWidth: 8,
                     ),
@@ -175,77 +98,93 @@ class _RecadosScreenState extends State<RecadosScreen> {
   }
 
   Widget _buildRecadoPage(Recado recado) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Positioned.fill(
-          child: CachedNetworkImage(
-            imageUrl: recado.imageUrl,
-            fit: BoxFit.cover,
-            placeholder: (context, url) => Container(color: Colors.grey[800]),
-            errorWidget: (context, url, error) => Container(color: Colors.black, child: const Icon(Icons.error, color: Colors.red)),
+    return GestureDetector(
+      onTap: () {
+        // --- CORREÇÃO APLICADA AQUI ---
+        // Agora passamos a 'imageUrl' para a tela de detalhes.
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RecadoDetailScreen(
+              title: recado.title,
+              content: recado.content,
+              date: recado.date,
+              imageUrl: recado.imageUrl, // <<<--- PARÂMETRO ADICIONADO
+            ),
           ),
-        ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            height: 400,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.transparent, Colors.black.withOpacity(0.8), Colors.black],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+        );
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: CachedNetworkImage(
+              imageUrl: recado.imageUrl,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(color: Colors.grey[900]),
+              errorWidget: (context, url, error) => Container(color: Colors.black, child: const Icon(Icons.error, color: Colors.red)),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 400,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.8), Colors.black],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
               ),
             ),
           ),
-        ),
-        Positioned(
-          bottom: 40,
-          left: 24,
-          right: 24,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                recado.title,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Nexa',
-                  height: 1.2,
+          Positioned(
+            bottom: 40,
+            left: 24,
+            right: 24,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  recado.title,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Nexa',
+                    height: 1.2,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 40),
-              Align(
-                alignment: Alignment.bottomRight,
-                child: FloatingActionButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        // --- CORREÇÃO APLICADA AQUI ---
-                        // Adicionamos o parâmetro 'date' que estava faltando.
-                        builder: (context) => RecadoDetailScreen(
-                          title: recado.title,
-                          content: recado.content,
-                          date: recado.date,
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RecadoDetailScreen(
+                            title: recado.title,
+                            content: recado.content,
+                            date: recado.date,
+                            imageUrl: recado.imageUrl,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  backgroundColor: Colors.white,
-                  child: const Icon(Icons.arrow_forward, color: Colors.black),
-                ),
-              )
-            ],
+                      );
+                    },
+                    backgroundColor: Colors.white,
+                    child: const Icon(Icons.arrow_forward, color: Colors.black),
+                  ),
+                )
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

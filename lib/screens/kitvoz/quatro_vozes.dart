@@ -55,6 +55,7 @@ class _QuatroVozesScreenState extends State<QuatroVozesScreen> {
         .collection('naipes')
         .doc(playlistId)
         .collection('musicas')
+        .orderBy('ordem')
         .get()
         .then((snapshot) {
           if (!mounted) return;

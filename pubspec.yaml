@@ -35,6 +35,8 @@ dependencies:
   carousel_slider: ^5.1.1
   screenshot: ^2.1.0
   path_provider: ^2.1.3
+  firebase_messaging: ^14.7.10
+  flutter_launcher_icons: ^0.14.4
 
  
  
@@ -54,6 +56,7 @@ flutter:
     - assets/images/wallpaper.png
     - assets/images/wallpaper_light.png
     - assets/images/chama_coral.png
+    - assets/images/template_partilha.png
     - assets/images/letras.svg
     - assets/images/banda.svg
     - assets/images/partitura.svg
@@ -73,8 +76,20 @@ flutter:
     - assets/images/chama_coral4.svg
     - assets/images/capa_light.svg
     - assets/fonts/
-
+    - assets/sounds/
+    - assets/sounds/metronome_tick.wav
+    - assets/icon/
+    - assets/icon/icon.png
+    
+  
   fonts:
     - family: Nexa
       fonts:
         - asset: assets/fonts/nexa1.ttf
+
+
+flutter_launcher_icons:
+android: "launcher_icon"
+ios: true
+image_path: "assets/icon/icon.png" # <<<--- CAMINHO PARA A SUA IMAGEM
+min_sdk_android: 21

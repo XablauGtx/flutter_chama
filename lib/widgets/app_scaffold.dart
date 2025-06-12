@@ -1,5 +1,3 @@
-// lib/widgets/app_scaffold.dart
-
 import 'package:flutter/material.dart';
 import 'package:chama_app/widgets/my_drawer.dart';
 
@@ -8,34 +6,36 @@ class AppScaffold extends StatelessWidget {
   final Widget body;
   final PreferredSizeWidget? bottom;
   final List<Widget>? actions;
+  final bool extendBodyBehindAppBar; // NOVO: Para o layout imersivo
+  final Color? scaffoldBackgroundColor; // NOVO: Para controlar a cor de fundo
 
   const AppScaffold({
     required this.title,
     required this.body,
     this.bottom,
     this.actions,
+    this.extendBodyBehindAppBar = false, // Valor padrão é 'false'
+    this.scaffoldBackgroundColor, // Por defeito, usará a cor do tema
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    // --- LÓGICA PARA SELECIONAR O PAPEL DE PAREDE ---
-    // 1. Verifica qual é o brilho do tema atual (claro ou escuro)
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    // 2. Define o caminho da imagem com base no tema
-    //    (Certifique-se de que você tem um 'wallpaper_light.png' nos seus assets)
     final wallpaperPath = isDarkMode 
-                          ? 'assets/images/wallpaper.png' 
-                          : 'assets/images/wallpaper_light.png';
+        ? 'assets/images/wallpaper.png' 
+        : 'assets/images/wallpaper_light.png';
 
+    // A lógica do Scaffold agora é mais flexível
     return Scaffold(
+      extendBodyBehindAppBar: extendBodyBehindAppBar, // <<<--- USA A NOVA PROPRIEDADE
       drawer: const MyDrawer(),
       appBar: AppBar(
-        // O AppBar agora usa as cores do tema definidas no main.dart
         title: Text(title, style: TextStyle(fontFamily: 'Nexa', color: Theme.of(context).appBarTheme.foregroundColor)),
         centerTitle: true,
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        // Torna a AppBar transparente se o layout for imersivo
+        backgroundColor: extendBodyBehindAppBar ? Colors.transparent : Theme.of(context).appBarTheme.backgroundColor,
+        elevation: extendBodyBehindAppBar ? 0 : null, // Remove a sombra no modo imersivo
         leading: Builder(
           builder: (context) {
             return IconButton(
@@ -49,16 +49,20 @@ class AppScaffold extends StatelessWidget {
         bottom: bottom,
         actions: actions,
       ),
-      // O body do Scaffold agora usa a imagem de fundo dinâmica
+      // Usa a cor de fundo passada ou a cor padrão do tema
+      backgroundColor: scaffoldBackgroundColor, 
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(wallpaperPath), // <<<--- USA A IMAGEM CORRETA
-            fit: BoxFit.cover,
-          ),
-        ),
+        // O papel de parede só é aplicado se não estivermos a usar um layout imersivo
+        decoration: !extendBodyBehindAppBar 
+            ? BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(wallpaperPath),
+                  fit: BoxFit.cover,
+                ),
+              ) 
+            : null,
         child: body,
       ),
     );
