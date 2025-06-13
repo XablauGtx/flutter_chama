@@ -6,7 +6,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
-// ignore: unused_import
 import 'package:chama_app/services/notification_service.dart'; // Importa o seu novo serviço
 
 late MyAudioHandler audioHandler;
@@ -20,6 +19,10 @@ void main() async {
   audioHandler = await initAudioService();
 
   await initializeDateFormatting('pt_BR', null);
+
+  // --- CORREÇÃO APLICADA AQUI ---
+  // Inicializa o serviço de notificações assim que o app arranca.
+  await NotificationService().initialize();
 
   // Envolvemos o nosso app com o ChangeNotifierProvider.
   runApp(

@@ -3,25 +3,40 @@ import 'package:flutter/foundation.dart';
 
 class NotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  static const String allUsersTopic = "avisos_gerais"; // Nome do nosso tópico
+  
+  // O nome do "canal" para onde enviaremos as notificações em massa.
+  static const String allUsersTopic = "avisos_gerais"; 
 
   Future<void> initialize() async {
-    // 1. Pedir permissão ao utilizador
+    debugPrint("--- A iniciar o Serviço de Notificações ---");
+    
+    // 1. Pedir permissão ao utilizador para receber notificações.
     NotificationSettings settings = await _firebaseMessaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
+      provisional: false,
     );
 
+    // 2. Verificar se o utilizador concedeu a permissão.
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      debugPrint('Permissão de notificação concedida pelo utilizador.');
+      debugPrint("[SUCESSO] Permissão de notificação concedida.");
       
-      // 2. Inscreve o dispositivo no tópico geral
+      // 3. Inscreve o dispositivo neste tópico.
+      // A partir de agora, ele receberá todas as mensagens enviadas para 'avisos_gerais'.
       await _firebaseMessaging.subscribeToTopic(allUsersTopic);
-      debugPrint('Inscrito no tópico: $allUsersTopic');
+      debugPrint("[SUCESSO] App inscrito no tópico: $allUsersTopic");
 
     } else {
-      debugPrint('Permissão de notificação negada pelo utilizador.');
+      debugPrint("[FALHA] Permissão de notificação negada pelo utilizador.");
     }
+    
+    // Ouve por mensagens enquanto o aplicativo está aberto.
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      debugPrint('Recebida uma notificação com o app aberto!');
+      debugPrint('Título: ${message.notification?.title}, Corpo: ${message.notification?.body}');
+    });
+
+    debugPrint("--- Serviço de Notificações Terminado ---");
   }
 }
