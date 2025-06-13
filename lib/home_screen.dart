@@ -183,11 +183,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     return Column(
                       children: [
+                         const SizedBox(height: 5.0), // <-- ADICIONE ESTA LINHA
                         CarouselSlider(
                           items: carouselItems,
                           options: CarouselOptions(
                             autoPlay: true,
-                            autoPlayInterval: const Duration(seconds: 8),
+                            autoPlayInterval: const Duration(seconds: 30),
                             enlargeCenterPage: true,
                             aspectRatio: 16 / 9,
                             viewportFraction: 0.9,

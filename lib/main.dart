@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
       builder: (context, themeProvider, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Chama App',
+          title: 'Chama Coral',
           
           // Define os temas e qual deles está ativo
           themeMode: themeProvider.themeMode,
