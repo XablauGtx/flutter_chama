@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+// ignore: unused_import
 import 'package:intl/intl.dart';
 
 import 'package:chama_app/widgets/app_scaffold.dart';

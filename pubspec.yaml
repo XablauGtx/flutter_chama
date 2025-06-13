@@ -103,3 +103,4 @@ flutter_native_splash:
     color: "#000000"
     image: assets/icon/icon3.png
     icon_background_color: "#000000"
+    branding: "assets/icon/logo_baixo.png"

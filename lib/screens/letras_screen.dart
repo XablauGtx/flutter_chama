@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+// ignore: unused_import
 import 'package:share_plus/share_plus.dart';
 import 'package:chama_app/models/music.dart';
 import 'package:chama_app/widgets/app_scaffold.dart';

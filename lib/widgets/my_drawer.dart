@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:chama_app/helpers/dialog_helpers.dart'; // Importa a função de senha
 
 // Imports para todas as telas que estarão no menu
+// ignore: unused_import
 import 'package:chama_app/home_screen.dart';
 import 'package:chama_app/screens/recados_screen.dart';
 import 'package:chama_app/agenda/agenda_screen.dart';

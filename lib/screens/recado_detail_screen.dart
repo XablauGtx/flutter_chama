@@ -1,5 +1,7 @@
+// ignore: unused_import
 import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
+// ignore: unused_import
 import 'package:chama_app/widgets/app_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';

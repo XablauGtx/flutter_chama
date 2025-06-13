@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart'; // Import necessário para LoopMode
+// ignore: unused_import
 import 'package:chama_app/models/music.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
@@ -43,6 +44,7 @@ class MyAudioHandler extends BaseAudioHandler {
   }
 
   @override
+  // ignore: override_on_non_overriding_member
   Future<void> updatePlaylist(List<MediaItem> mediaItems) async {
     final artworkUri = await _getArtworkUri();
     final processedMediaItems = mediaItems.map((item) {
