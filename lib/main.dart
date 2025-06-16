@@ -1,3 +1,5 @@
+// 1. Ficheiro: lib/main.dart (VERSÃO CORRIGIDA)
+
 import 'package:chama_app/firebase_options.dart';
 import 'package:chama_app/models/audio_handler.dart';
 import 'package:chama_app/providers/theme_provider.dart';
@@ -6,7 +8,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
-import 'package:chama_app/services/notification_service.dart'; // Importa o seu novo serviço
+import 'package:chama_app/services/notification_service.dart';
+import 'package:chama_app/navigation/navigator_key.dart';
 
 late MyAudioHandler audioHandler;
 
@@ -21,7 +24,8 @@ void main() async {
   await initializeDateFormatting('pt_BR', null);
 
   // --- CORREÇÃO APLICADA AQUI ---
-  // Inicializa o serviço de notificações assim que o app arranca.
+  // Esta linha é essencial. Ela executa o código que pede permissão
+  // ao utilizador e inscreve o telemóvel para receber as notificações.
   await NotificationService().initialize();
 
   // Envolvemos o nosso app com o ChangeNotifierProvider.
@@ -44,6 +48,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Chama Coral',
+          navigatorKey: navigatorKey,
           
           // Define os temas e qual deles está ativo
           themeMode: themeProvider.themeMode,
