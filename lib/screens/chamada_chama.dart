@@ -1,7 +1,7 @@
-import 'package:chama_app/widgets/app_scaffold.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:chama_app/widgets/app_scaffold.dart';
 
 // Modelo para representar um membro
 class Membro {
@@ -46,7 +46,6 @@ class _ChamadaChamaScreenState extends State<ChamadaChamaScreen> with SingleTick
 
     final dataAtual = _getTodayDateKey();
 
-    // Verifica se a presença já foi registrada para esta pessoa hoje
     final existingRecord = await FirebaseFirestore.instance
         .collection('registrosChamada')
         .where('data', isEqualTo: dataAtual)
@@ -65,11 +64,12 @@ class _ChamadaChamaScreenState extends State<ChamadaChamaScreen> with SingleTick
     }
 
     try {
-      // Adiciona o novo registro de presença
+      // Garante que o status 'presente' é sempre adicionado
       await FirebaseFirestore.instance.collection('registrosChamada').add({
         'nome': membro.nome,
         'naipe': membro.naipe,
         'data': dataAtual,
+        'status': 'presente',
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -79,7 +79,6 @@ class _ChamadaChamaScreenState extends State<ChamadaChamaScreen> with SingleTick
         );
       }
       
-      // Muda para a aba de presentes
       _tabController.animateTo(1);
 
     } catch (e) {
@@ -97,40 +96,38 @@ class _ChamadaChamaScreenState extends State<ChamadaChamaScreen> with SingleTick
       context: context,
       builder: (context) {
         return NewChoristerDialog(
-          onRegister: (nome, telefone, naipe) {
-            _registerNewChorister(nome, telefone, naipe);
+          onRegister: (nome, telefone, naipe, nascimento) {
+            _registerNewChorister(nome, telefone, naipe, nascimento);
           },
         );
       },
     );
   }
 
-  /// Lógica para registar um novo membro e a sua presença.
-  Future<void> _registerNewChorister(String nome, String telefone, String naipe) async {
+  /// Lógica para registar um novo membro, agora incluindo a data de nascimento.
+  Future<void> _registerNewChorister(String nome, String telefone, String naipe, DateTime? nascimento) async {
     setState(() { _isSubmitting = true; });
 
     try {
-      // Usa um WriteBatch para garantir que ambas as operações sejam atómicas
       final batch = FirebaseFirestore.instance.batch();
-
-      // 1. Cria o novo documento na coleção 'membros'
+      
       final newMemberRef = FirebaseFirestore.instance.collection('membros').doc();
       batch.set(newMemberRef, {
         'nome': nome,
         'naipe': naipe,
         'telefone': telefone,
+        'nascimento': nascimento, // Salva a data de nascimento
       });
 
-      // 2. Cria o registo de presença na coleção 'registrosChamada'
       final newAttendanceRef = FirebaseFirestore.instance.collection('registrosChamada').doc();
       batch.set(newAttendanceRef, {
         'nome': nome,
         'naipe': naipe,
         'data': _getTodayDateKey(),
+        'status': 'presente',
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // 3. Executa ambas as operações
       await batch.commit();
 
       if (mounted) {
@@ -148,7 +145,6 @@ class _ChamadaChamaScreenState extends State<ChamadaChamaScreen> with SingleTick
       if (mounted) setState(() { _isSubmitting = false; });
     }
   }
-
 
   /// Mostra um diálogo para selecionar um membro de um naipe existente.
   void _showMemberSelectionDialog(String naipe) {
@@ -190,7 +186,7 @@ class _ChamadaChamaScreenState extends State<ChamadaChamaScreen> with SingleTick
     );
   }
 
-  /// WIDGET ATUALIZADO: Agora inclui um botão para novos coralistas.
+  /// Widget que mostra os botões dos naipes e o link para novos coralistas.
   Widget _buildNaipeSelection() {
     return Container(
       decoration: const BoxDecoration(
@@ -210,28 +206,24 @@ class _ChamadaChamaScreenState extends State<ChamadaChamaScreen> with SingleTick
                 Expanded(
                   child: GridView.builder(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 2.5,
+                      crossAxisCount: 2, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 2.5,
                     ),
                     itemCount: _naipes.length,
                     itemBuilder: (context, index) {
-                      final naipe = _naipes[index];
-                      return ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF192F3C).withOpacity(0.8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                          side: const BorderSide(color: Colors.white24)
-                        ),
-                        onPressed: () => _showMemberSelectionDialog(naipe),
-                        child: Text(naipe, style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
-                      );
+                        final naipe = _naipes[index];
+                        return ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF192F3C).withOpacity(0.8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                                side: const BorderSide(color: Colors.white24)
+                            ),
+                            onPressed: () => _showMemberSelectionDialog(naipe),
+                            child: Text(naipe, style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
+                        );
                     },
                   ),
                 ),
                 const SizedBox(height: 20),
-                // NOVO: Botão para abrir o formulário de registo
                 TextButton(
                   onPressed: _showNewChoristerDialog,
                   child: const Text(
@@ -252,6 +244,7 @@ class _ChamadaChamaScreenState extends State<ChamadaChamaScreen> with SingleTick
     );
   }
 
+  /// Widget que mostra a lista de presentes agrupada por naipe.
   Widget _buildAttendanceList() {
     return Container(
       decoration: const BoxDecoration(
@@ -272,7 +265,6 @@ class _ChamadaChamaScreenState extends State<ChamadaChamaScreen> with SingleTick
           }
 
           final records = snapshot.data!.docs;
-          // Agrupando por naipe
           final Map<String, List<String>> groupedByNaipe = {};
           for (var record in records) {
             final data = record.data() as Map<String, dynamic>;
@@ -285,7 +277,7 @@ class _ChamadaChamaScreenState extends State<ChamadaChamaScreen> with SingleTick
             padding: const EdgeInsets.all(16),
             children: groupedByNaipe.entries.map((entry) {
               final naipe = entry.key;
-              final nomes = entry.value;
+              final nomes = entry.value..sort(); // Ordena os nomes alfabeticamente
               return Card(
                 color: const Color(0xFF192F3C).withOpacity(0.9),
                 margin: const EdgeInsets.only(bottom: 16),
@@ -307,96 +299,7 @@ class _ChamadaChamaScreenState extends State<ChamadaChamaScreen> with SingleTick
   }
 }
 
-/// NOVO WIDGET: O diálogo de registo para novos coralistas.
-class NewChoristerDialog extends StatefulWidget {
-  final Function(String nome, String telefone, String naipe) onRegister;
-
-  const NewChoristerDialog({super.key, required this.onRegister});
-
-  @override
-  State<NewChoristerDialog> createState() => _NewChoristerDialogState();
-}
-
-class _NewChoristerDialogState extends State<NewChoristerDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _nomeController = TextEditingController();
-  final _telefoneController = TextEditingController();
-  String? _selectedNaipe;
-  final List<String> _naipes = ['Soprano', 'Contralto', 'Tenor', 'Baixo'];
-
-  void _submit() {
-    if (_formKey.currentState!.validate()) {
-      if (_selectedNaipe == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, selecione um naipe.'), backgroundColor: Colors.orange)
-        );
-        return;
-      }
-      // Fecha o diálogo e envia os dados para a tela principal
-      Navigator.of(context).pop();
-      widget.onRegister(
-        _nomeController.text.trim(),
-        _telefoneController.text.trim(),
-        _selectedNaipe!,
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: const Color(0xFF192F3C),
-      title: const Text('Registo de Novo Coralista', style: TextStyle(color: Colors.white)),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nomeController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Nome Completo', labelStyle: TextStyle(color: Colors.white70)),
-                validator: (value) => value == null || value.trim().isEmpty ? 'O nome é obrigatório.' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _telefoneController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Telefone', labelStyle: TextStyle(color: Colors.white70)),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedNaipe,
-                hint: const Text('Selecione o seu naipe', style: TextStyle(color: Colors.white70)),
-                dropdownColor: const Color(0xFF192F3C),
-                style: const TextStyle(color: Colors.white),
-                items: _naipes.map((naipe) => DropdownMenuItem(value: naipe, child: Text(naipe))).toList(),
-                onChanged: (value) => setState(() => _selectedNaipe = value),
-                validator: (value) => value == null ? 'Por favor, selecione um naipe.' : null,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancelar', style: TextStyle(color: Colors.white70)),
-        ),
-        ElevatedButton(
-          onPressed: _submit,
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-          child: const Text('Registar e Confirmar Presença'),
-        ),
-      ],
-    );
-  }
-}
-
-
-// A sua classe MemberSelectionDialog continua a mesma
+// --- Diálogo de Seleção para Membros Existentes ---
 class MemberSelectionDialog extends StatefulWidget {
   final String naipe;
   final Function(Membro) onMemberSelected;
@@ -490,6 +393,93 @@ class _MemberSelectionDialogState extends State<MemberSelectionDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancelar', style: TextStyle(color: Colors.white70)),
         ),
+      ],
+    );
+  }
+}
+
+// --- NOVO DIÁLOGO DE REGISTO ---
+class NewChoristerDialog extends StatefulWidget {
+  final Function(String nome, String telefone, String naipe, DateTime? nascimento) onRegister;
+  const NewChoristerDialog({super.key, required this.onRegister});
+
+  @override
+  State<NewChoristerDialog> createState() => _NewChoristerDialogState();
+}
+
+class _NewChoristerDialogState extends State<NewChoristerDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _nomeController = TextEditingController();
+  final _telefoneController = TextEditingController();
+  final _nascimentoController = TextEditingController();
+  String? _selectedNaipe;
+  DateTime? _selectedDate;
+  final List<String> _naipes = ['Soprano', 'Contralto', 'Tenor', 'Baixo'];
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(1920),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _nascimentoController.text = DateFormat('dd/MM/yyyy').format(picked);
+      });
+    }
+  }
+
+  void _submit() {
+    if (_formKey.currentState!.validate()) {
+      if (_selectedNaipe == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, selecione um naipe.'), backgroundColor: Colors.orange)
+        );
+        return;
+      }
+      Navigator.of(context).pop();
+      widget.onRegister(
+        _nomeController.text.trim(),
+        _telefoneController.text.trim(),
+        _selectedNaipe!,
+        _selectedDate,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF192F3C),
+      title: const Text('Registo de Novo Coralista', style: TextStyle(color: Colors.white)),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(controller: _nomeController, style: const TextStyle(color: Colors.white), decoration: const InputDecoration(labelText: 'Nome Completo', labelStyle: TextStyle(color: Colors.white70)), validator: (v) => v!.trim().isEmpty ? 'O nome é obrigatório.' : null),
+              const SizedBox(height: 16),
+              TextFormField(controller: _telefoneController, style: const TextStyle(color: Colors.white), decoration: const InputDecoration(labelText: 'Telefone', labelStyle: TextStyle(color: Colors.white70)), keyboardType: TextInputType.phone),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(value: _selectedNaipe, hint: const Text('Selecione o seu naipe', style: TextStyle(color: Colors.white70)), dropdownColor: const Color(0xFF192F3C), style: const TextStyle(color: Colors.white), items: _naipes.map((n) => DropdownMenuItem(value: n, child: Text(n))).toList(), onChanged: (v) => setState(() => _selectedNaipe = v), validator: (v) => v == null ? 'O naipe é obrigatório.' : null),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _nascimentoController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(labelText: 'Data de Nascimento', labelStyle: TextStyle(color: Colors.white70), suffixIcon: Icon(Icons.calendar_today, color: Colors.white70)),
+                readOnly: true,
+                onTap: () => _selectDate(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar', style: TextStyle(color: Colors.white70))),
+        ElevatedButton(onPressed: _submit, style: ElevatedButton.styleFrom(backgroundColor: Colors.red), child: const Text('Registar e Confirmar Presença')),
       ],
     );
   }
