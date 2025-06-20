@@ -1,0 +1,18 @@
+double totalSeconds = total.inSeconds.toDouble();
+double positionSeconds = position.inSeconds.toDouble();
+
+// Verifica se os valores são válidos para evitar crash no iOS
+bool isValidSliderRange = totalSeconds.isFinite && totalSeconds > 0 && positionSeconds >= 0;
+
+Slider(
+  activeColor: theme.colorScheme.primary,
+  inactiveColor: theme.colorScheme.onSurface.withOpacity(0.3),
+  min: 0,
+  max: isValidSliderRange ? totalSeconds : 1.0,
+  value: isValidSliderRange
+      ? positionSeconds.clamp(0.0, totalSeconds)
+      : 0.0,
+  onChanged: isValidSliderRange
+      ? (value) => audioHandler.seek(Duration(seconds: value.toInt()))
+      : null,
+),
