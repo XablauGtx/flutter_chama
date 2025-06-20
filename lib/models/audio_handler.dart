@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart'; // Import necessário para o debugPrint
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:audio_service/audio_service.dart';
@@ -66,7 +67,24 @@ class MyAudioHandler extends BaseAudioHandler {
     await _player.setAudioSource(_playlist, initialIndex: 0, preload: true);
   }
 
-  // --- NOVO MÉTODO PARA O MODO DE REPETIÇÃO ---
+  // --- NOVO MÉTODO SEGURO PARA `setPitch` ---
+  // Adicione esta função à sua classe MyAudioHandler.
+  Future<void> setPitch(double pitch) async {
+    try {
+      // Tenta executar o comando normalmente
+      await _player.setPitch(pitch);
+    } on MissingPluginException {
+      // Se o erro específico acontecer (MissingPluginException), ele será "apanhado" aqui.
+      // Em vez de crashar a app, ele apenas imprime um aviso e continua.
+      debugPrint("AVISO: A função setPitch não é suportada neste ambiente de build. A ignorar.");
+    } catch (e) {
+      // Apanha qualquer outro erro inesperado que possa acontecer.
+      debugPrint("Ocorreu um erro inesperado ao usar o setPitch: $e");
+    }
+  }
+
+  // --- FIM DO NOVO MÉTODO ---
+
   Future<void> cycleRepeatMode() async {
     final currentMode = _player.loopMode;
     final nextMode = switch (currentMode) {
@@ -121,7 +139,6 @@ class MyAudioHandler extends BaseAudioHandler {
           MediaAction.seekBackward,
         },
         androidCompactActionIndices: const [0, 1, 3],
-        // --- ATUALIZAÇÃO PARA INCLUIR O MODO DE REPETIÇÃO ---
         repeatMode: const {
           LoopMode.off: AudioServiceRepeatMode.none,
           LoopMode.one: AudioServiceRepeatMode.one,
